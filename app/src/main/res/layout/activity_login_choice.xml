@@ -5,7 +5,8 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".LoginChoice">
+    tools:context=".LoginChoice"
+    android:background="@drawable/background_image">
 
     <TextView
         android:id="@+id/titleText"
@@ -23,32 +24,39 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="32dp"
         android:orientation="vertical"
         android:padding="16dp"
-        android:layout_marginHorizontal="32dp"
-        android:background="@drawable/rounded_white_background"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/titleText"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintVertical_bias="0.675"
+        tools:layout_editor_absoluteX="32dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonStudent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/rounded_white_background"
             android:text="Student"
-            android:layout_marginBottom="8dp" />
+            android:textColor="@color/white" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonTeacher"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/rounded_white_background"
             android:text="Teacher"
-            android:layout_marginBottom="8dp" />
+            android:textColor="@color/white" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonParent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Parent" />
+            android:background="@drawable/rounded_white_background"
+            android:text="Parent"
+            android:textColor="@color/white" />
 
     </LinearLayout>
 

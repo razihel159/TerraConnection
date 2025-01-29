@@ -5,7 +5,8 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SchoolMap">
+    tools:context=".SchoolMap"
+    android:background="@drawable/background_image">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
@@ -89,6 +90,12 @@
                 android:textStyle="bold"
                 android:padding="16dp"
                 android:background="#F5F5F5" />
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/upang_map" />
 
         </LinearLayout>
 
