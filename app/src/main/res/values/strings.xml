@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">TerraConnection</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="menu_home">Home</string>
+    <string name="menu_class_attendance">Class Attendance</string>
+    <string name="menu_class_schedule">Class Schedule</string>
+    <string name="menu_tracker">Tracker</string>
 </resources>
