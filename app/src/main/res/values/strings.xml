@@ -5,4 +5,6 @@
     <string name="menu_class_attendance">Class Attendance</string>
     <string name="menu_class_schedule">Class Schedule</string>
     <string name="menu_tracker">Tracker</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

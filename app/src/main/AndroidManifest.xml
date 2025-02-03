@@ -16,9 +16,6 @@
             android:name=".SchoolMap"
             android:exported="false" />
         <activity
-            android:name=".HomePanel"
-            android:exported="false" />
-        <activity
             android:name=".ClassSchedule"
             android:exported="false" />
         <activity
@@ -28,7 +25,7 @@
             android:name=".LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.app.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.TerraConnection">

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Specify which directories should be backed up -->
+    <include domain="file" path="path/to/important/data" />
+
+    <!-- Exclude specific directories or files from backup -->
+    <exclude domain="file" path="path/to/unwanted/data"
+        tools:ignore="FullBackupContent" />
+
+    <!-- You can specify additional backup rules, like excluding databases -->
+    <exclude domain="database" path="com.example.terraconnection.db"
+        tools:ignore="FullBackupContent" />
+</full-backup-content>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#EEEEEE">
+
+    <TextView
+        android:id="@+id/drawerHeaderText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Welcome"
+        android:textStyle="bold"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/drawerSubHeaderText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Renier Reyes"
+        android:textSize="14sp" />
+</LinearLayout>

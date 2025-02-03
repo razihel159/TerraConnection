@@ -27,6 +27,13 @@ android {
             )
         }
     }
+
+    buildFeatures{
+
+        viewBinding = true
+
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -62,4 +69,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("androidx.drawerlayout:drawerlayout:1.2.0")
     implementation("com.google.android.material:material:1.9.0")
+    implementation("androidx.fragment:fragment-ktx:1.6.1")
 }
