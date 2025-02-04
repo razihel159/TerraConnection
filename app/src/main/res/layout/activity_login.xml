@@ -72,7 +72,7 @@
                     android:layout_height="wrap_content"
                     android:hint="Username"
                     android:inputType="text"
-                    app:drawableStart="@drawable/ic_profile" />
+                    android:drawableStart="@drawable/ic_profile" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -87,7 +87,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:hint="Password"
-                    app:drawableStart="@drawable/ic_lock"/>
+                    android:drawableStart="@drawable/ic_lock"/>
 
             </com.google.android.material.textfield.TextInputLayout>
 
