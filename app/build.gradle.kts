@@ -10,8 +10,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.terraconnection"
-        minSdk = 19 // Updated to align with the requirement
-        targetSdk = 33 // Updated to align with the requirement
+        minSdk = 24
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -28,23 +28,25 @@ android {
         }
     }
 
-    buildFeatures {
+    buildFeatures{
+
         viewBinding = true
-        compose = true
+
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
     kotlinOptions {
         jvmTarget = "11"
+    }
+    buildFeatures {
+        compose = true
     }
 }
 
 dependencies {
-
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -68,6 +70,4 @@ dependencies {
     implementation("androidx.drawerlayout:drawerlayout:1.2.0")
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.fragment:fragment-ktx:1.6.1")
-    implementation("com.google.android.material:material:1.9.0")
-    implementation("androidx.multidex:multidex:2.0.1")
 }
