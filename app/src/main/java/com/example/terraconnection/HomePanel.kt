@@ -1,13 +1,12 @@
-package com.example.app
+package com.example.terraconnection
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.terraconnection.R
 
-class HomePanelFragment : Fragment() {
+class HomePanel : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
