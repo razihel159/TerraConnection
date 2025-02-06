@@ -1,32 +1,24 @@
 package com.example.terraconnection
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.terraconnection.databinding.ActivityHomePanelBinding
+import com.example.terraconnection.databinding.ActivityListStudentBinding
 
-class HomePanelActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityHomePanelBinding
-
+class ListStudentActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityListStudentBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        binding = ActivityHomePanelBinding.inflate(layoutInflater)
+        binding = ActivityListStudentBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
-        }
-
-        binding.subjectCard.setOnClickListener {
-            val intent = Intent(this, ListStudentActivity::class.java)
-            startActivity(intent)
         }
 
     }
