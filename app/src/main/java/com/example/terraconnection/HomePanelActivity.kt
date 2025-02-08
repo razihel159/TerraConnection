@@ -2,10 +2,13 @@ package com.example.terraconnection
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ImageButton
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.terraconnection.databinding.ActivityHomePanelBinding
 
 class HomePanelActivity : AppCompatActivity() {
@@ -15,8 +18,9 @@ class HomePanelActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = ActivityHomePanelBinding.inflate(layoutInflater)
-        val view = binding.root
-        setContentView(view)
+        setContentView(binding.root)
+
+        val profileIconButton: ImageButton = binding.studentIcon
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -24,10 +28,22 @@ class HomePanelActivity : AppCompatActivity() {
             insets
         }
 
+        // Navigate to the student list
         binding.subjectCard.setOnClickListener {
             val intent = Intent(this, ListStudentActivity::class.java)
             startActivity(intent)
         }
 
+        // Navigate to profile
+        profileIconButton.setOnClickListener {
+            val intent = Intent(this, Profile::class.java)
+            startActivity(intent)
+        }
+
+        // 🚀 **Navigate to EventListActivity when clicking Calendar Log**
+        binding.calendarLog.setOnClickListener {
+            val intent = Intent(this, EventListActivity::class.java)
+            startActivity(intent)
+        }
     }
 }
