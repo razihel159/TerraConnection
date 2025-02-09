@@ -62,5 +62,22 @@
             android:layout_centerVertical="true"
             android:background="@drawable/status_indicator"
             android:layout_marginEnd="12dp"/>
+
+        <ImageButton
+            android:id="@+id/notifyButton"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/notification"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside"
+            app:tint="@android:color/holo_red_dark"
+            app:layout_constraintEnd_toStartOf="@id/statusIndicator"
+            app:layout_constraintTop_toTopOf="@id/statusIndicator"
+            app:layout_constraintBottom_toBottomOf="@id/statusIndicator"
+            android:layout_marginEnd="8dp"
+            android:clickable="true"
+            android:focusable="true"/>
+
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

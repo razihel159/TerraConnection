@@ -1,5 +1,6 @@
 package com.example.terraconnection
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageButton
@@ -7,8 +8,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.terraconnection.databinding.ActivityHomePanelBinding
 
 class HomePanelActivity : AppCompatActivity() {
@@ -28,22 +27,33 @@ class HomePanelActivity : AppCompatActivity() {
             insets
         }
 
-        // Navigate to the student list
         binding.subjectCard.setOnClickListener {
             val intent = Intent(this, ListStudentActivity::class.java)
             startActivity(intent)
         }
 
-        // Navigate to profile
         profileIconButton.setOnClickListener {
             val intent = Intent(this, Profile::class.java)
             startActivity(intent)
         }
 
-        // 🚀 **Navigate to EventListActivity when clicking Calendar Log**
-        binding.calendarLog.setOnClickListener {
-            val intent = Intent(this, EventListActivity::class.java)
+        binding.calendarHistory.setOnClickListener {
+            val intent = Intent(this, AttendanceLogs::class.java)
             startActivity(intent)
         }
+        binding.gpsLocation.setOnClickListener {
+            val intent = Intent(this, MapsFragment::class.java)
+            startActivity(intent)
+        }
+
+    }
+    override fun onResume() {
+        super.onResume()
+        // Retrieve notification from SharedPreferences
+        val sharedPreferences = getSharedPreferences("TerraPrefs", Context.MODE_PRIVATE)
+        val notificationMessage = sharedPreferences.getString("notification_message", "No notifications yet.")
+
+        // Update UI
+        binding.studentNotification.text = notificationMessage
     }
 }
