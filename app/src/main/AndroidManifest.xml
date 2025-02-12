@@ -19,12 +19,7 @@
         android:theme="@style/Theme.TerraConnection"
         tools:targetApi="31">
 
-        <!-- Google Maps API Key -->
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="${MAPS_API_KEY}" />
 
-        <!-- All activities in your application -->
         <activity
             android:name=".AttendanceLogs"
             android:exported="false" />
@@ -41,9 +36,6 @@
             android:name=".SchoolMapActivity"
             android:exported="false" />
         <activity
-            android:name=".LoginPageActivity"
-            android:exported="false" />
-        <activity
             android:name=".ClassScheduleActivity"
             android:exported="false" />
         <activity
@@ -51,7 +43,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".LoginChoiceActivity"
+            android:name=".LoginPageActivity"
             android:exported="true"
             android:theme="@style/Theme.App.SplashScreen">
             <intent-filter>

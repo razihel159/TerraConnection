@@ -5,13 +5,12 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HomePanelActivity"
-    android:background="@drawable/background_image">
+    tools:context=".HomePanelActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/teal_700"
+        android:background="@color/violet"
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="0dp">
 
@@ -31,12 +30,13 @@
                 android:textSize="24sp" />
 
             <ImageButton
-                android:id="@+id/studentIcon"
-                android:layout_width="60dp"
-                android:layout_height="48dp"
+                android:id="@+id/studentProfile"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
                 android:layout_alignParentEnd="true"
-                android:background="@android:color/transparent"
+                android:background="@drawable/circle_background"
                 android:src="@drawable/ic_profile" />
+
         </RelativeLayout>
 
         <!-- Main Content -->
@@ -61,7 +61,8 @@
                     android:layout_marginBottom="16dp"
                     android:text="Today's Schedule"
                     android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:textColor="@color/white"/>
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/subjectCard"
@@ -86,7 +87,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Computer Forensics"
-                            android:textColor="@color/teal_700"
+                            android:textColor="@color/violet"
                             android:textSize="16sp" />
 
                         <TextView
@@ -109,7 +110,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/scrollView"
-            android:background="@color/teal_700"
+            android:background="@color/violet"
             android:clickable="true"
             android:focusable="true"
             android:orientation="vertical"
@@ -121,7 +122,8 @@
                 android:layout_marginBottom="8dp"
                 android:text="Calendar Log"
                 android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textColor="@color/white"/>
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -165,7 +167,8 @@
                 android:layout_marginBottom="8dp"
                 android:text="Notification"
                 android:textSize="20sp"
-                android:textStyle="bold">
+                android:textStyle="bold"
+                android:textColor="@color/white">
             </TextView>
 
 
@@ -222,7 +225,7 @@
                 <ImageView
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:src="@drawable/ic_menu" />
+                    android:src="@drawable/ic_location" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -239,7 +242,9 @@
 
                 <ImageView
                     android:layout_width="24dp"
-                    android:layout_height="24dp" />
+                    android:layout_height="24dp"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/ic_home"/>
 
                 <TextView
                     android:layout_width="wrap_content"

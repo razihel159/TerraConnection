@@ -19,7 +19,7 @@ class HomePanelActivity : AppCompatActivity() {
         binding = ActivityHomePanelBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val profileIconButton: ImageButton = binding.studentIcon
+        val profileIconButton: ImageButton = binding.studentProfile
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())

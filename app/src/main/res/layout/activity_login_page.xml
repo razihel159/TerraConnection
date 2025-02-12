@@ -6,53 +6,40 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".LoginPageActivity"
-    android:background="@drawable/background_image">
+    android:background="@color/violet">
 
-    <TextView
-        android:id="@+id/tvAppName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
-        android:text="Terra Connection"
-        android:textColor="@android:color/white"
-        android:textSize="32sp"
-        android:textStyle="bold"
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="315dp"
+        android:layout_height="275dp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintBottom_toTopOf="@id/cardView"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/tvWelcome"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="welcome back student!"
-        android:textColor="@android:color/white"
-        android:textSize="24sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvAppName" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_logo" />
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="24dp"
         app:cardCornerRadius="16dp"
         app:cardElevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvWelcome"
-        >
+        app:layout_constraintTop_toBottomOf="@id/logo">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="357dp"
             android:orientation="vertical"
             android:padding="24dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Welcome Back"
+                android:text="Log In"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -71,24 +58,23 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_profile"
                     android:hint="Username"
-                    android:inputType="text"
-                    android:drawableStart="@drawable/ic_profile" />
+                    android:inputType="text" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                >
+                android:layout_marginTop="8dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPassword"
+                    android:drawableStart="@drawable/ic_lock"
                     android:hint="Password"
-                    android:drawableStart="@drawable/ic_lock"/>
+                    android:inputType="textPassword" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -97,11 +83,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:orientation="horizontal">
-
-                <CheckBox
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Remember me" />
 
                 <Space
                     android:layout_width="0dp"
@@ -112,19 +93,21 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Forgot Password?"
-                    android:textColor="@color/black" />
+                    android:textColor="@color/violet" />
 
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_signUP"
+                android:id="@+id/btn_signIN"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
+                android:backgroundTint="@color/violet"
+                android:clickable="true"
                 android:padding="12dp"
                 android:text="Sign in"
-                android:clickable="true"
-                android:textAllCaps="false" />
+                android:textAllCaps="false"
+                android:textColor="@color/white" />
 
         </LinearLayout>
 

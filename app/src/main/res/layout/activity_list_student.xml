@@ -13,13 +13,14 @@
         android:id="@+id/headerTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/teal_700"
+        android:background="@color/violet"
         android:padding="16dp"
         android:text="Student Attendance"
         android:textColor="@color/white"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="parent"/>
 
     <!-- Class Info Card -->
     <androidx.cardview.widget.CardView

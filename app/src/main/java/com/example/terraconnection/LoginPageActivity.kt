@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.terraconnection.databinding.ActivityLoginPageBinding
@@ -13,6 +14,8 @@ class LoginPageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Thread.sleep(3000)
+        installSplashScreen()
         enableEdgeToEdge()
 
         // Correct ViewBinding initialization
@@ -23,7 +26,7 @@ class LoginPageActivity : AppCompatActivity() {
         // Handle system window insets
 
         // Fix Button Click Listener
-        binding.btnSignUP.setOnClickListener {
+        binding.btnSignIN.setOnClickListener {
             val intent = Intent(this, HomePanelActivity::class.java)
             startActivity(intent)
         }
