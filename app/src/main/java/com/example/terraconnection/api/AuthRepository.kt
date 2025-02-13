@@ -1,6 +1,6 @@
 import android.util.Log
-import com.example.terraconnection.api.LoginRequest
-import com.example.terraconnection.api.LoginResponse
+import com.example.terraconnection.data.LoginRequest
+import com.example.terraconnection.data.LoginResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

@@ -8,9 +8,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.terraconnection.adapters.ScheduleAdapter
+import com.example.terraconnection.adapters.OnScheduleClickListener
+import com.example.terraconnection.data.Schedule
 import com.example.terraconnection.databinding.ActivityHomePanelBinding
 
-class HomePanelActivity : AppCompatActivity() {
+class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
     private lateinit var binding: ActivityHomePanelBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,10 +31,8 @@ class HomePanelActivity : AppCompatActivity() {
             insets
         }
 
-        binding.subjectCard.setOnClickListener {
-            val intent = Intent(this, ListStudentActivity::class.java)
-            startActivity(intent)
-        }
+        // ✅ Set up RecyclerView
+        setupRecyclerView()
 
         profileIconButton.setOnClickListener {
             val intent = Intent(this, Profile::class.java)
@@ -41,12 +43,35 @@ class HomePanelActivity : AppCompatActivity() {
             val intent = Intent(this, AttendanceLogs::class.java)
             startActivity(intent)
         }
+
         binding.gpsLocation.setOnClickListener {
             val intent = Intent(this, MapsFragment::class.java)
             startActivity(intent)
         }
-
     }
+
+    private fun setupRecyclerView() {
+        val scheduleList = listOf(
+            Schedule("ITE 384", "Computer Forensics", "ITS-200", "07:30 AM-09:00 AM"),
+            Schedule("ITE 385", "Ethical Hacking", "ITS-200", "12:00 PM - 01:30 PM"),
+        )
+
+        val adapter = ScheduleAdapter(scheduleList, this) // Pass this as the listener
+
+        binding.subjectCard.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.subjectCard.adapter = adapter
+    }
+
+    override fun onScheduleClick(schedule: Schedule) {
+
+        val intent = Intent(this, ListStudentActivity::class.java)
+        intent.putExtra("subject_code", schedule.subjectCode)
+        intent.putExtra("subject_name", schedule.subjectName)
+        intent.putExtra("room", schedule.room)
+        intent.putExtra("time", schedule.time)
+        startActivity(intent)
+    }
+
     override fun onResume() {
         super.onResume()
         // Retrieve notification from SharedPreferences
