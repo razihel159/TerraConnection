@@ -13,9 +13,21 @@ import com.example.terraconnection.adapters.ScheduleAdapter
 import com.example.terraconnection.adapters.OnScheduleClickListener
 import com.example.terraconnection.data.Schedule
 import com.example.terraconnection.databinding.ActivityHomePanelBinding
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import android.view.View
+import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import com.example.terraconnection.api.ApiService
+import com.example.terraconnection.api.RetrofitClient
+import android.util.Log
 
 class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
     private lateinit var binding: ActivityHomePanelBinding
+    
+    private val apiService: ApiService = RetrofitClient.apiService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +44,9 @@ class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
         }
 
         // ✅ Set up RecyclerView
-        setupRecyclerView()
+        lifecycleScope.launch {
+            setupRecyclerView()
+        }
 
         profileIconButton.setOnClickListener {
             val intent = Intent(this, StudentProfile::class.java)
@@ -50,25 +64,66 @@ class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
         }
     }
 
-    private fun setupRecyclerView() {
-        val scheduleList = listOf(
-            Schedule("ITE 384", "Computer Forensics", "ITS-200", "07:30 AM-09:00 AM"),
-            Schedule("ITE 385", "Ethical Hacking", "ITS-200", "12:00 PM - 01:30 PM"),
-        )
+    private suspend fun setupRecyclerView() {
+        try {
+            binding.loadingIndicator.visibility = View.VISIBLE
 
-        val adapter = ScheduleAdapter(scheduleList, this) // Pass this as the listener
+            val token = SessionManager.getToken(this)?.let { "Bearer $it" }
+                ?: throw Exception("No authentication token found")
+            
+            val role = SessionManager.getRole(this)
+            
+            val scheduleResponse = when (role) {
+                "professor" -> apiService.getProfessorSchedule(token)
+                else -> apiService.getStudentSchedule(token)
+            }
 
-        binding.subjectCard.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        binding.subjectCard.adapter = adapter
+            if (scheduleResponse.isSuccessful) {
+                val scheduleList: List<Schedule> = scheduleResponse.body()?.schedule ?: emptyList()
+                Log.d("Schedule", "Received schedules: $scheduleList")
+                
+                if (scheduleList.isNotEmpty()) {
+                    val firstSchedule = scheduleList[0]
+                    Log.d("Schedule", """
+                        First schedule details:
+                        Class Code: ${firstSchedule.classCode}
+                        Class Name: ${firstSchedule.className}
+                        Room: ${firstSchedule.room}
+                        Time: ${firstSchedule.startTime} - ${firstSchedule.endTime}
+                    """.trimIndent())
+                }
+
+                val adapter = ScheduleAdapter(scheduleList, this)
+                binding.subjectCard.layoutManager = LinearLayoutManager(
+                    this,
+                    LinearLayoutManager.HORIZONTAL,
+                    false
+                )
+                binding.subjectCard.adapter = adapter
+            } else {
+                Toast.makeText(
+                    this,
+                    "Failed to load schedule: ${scheduleResponse.message()}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                "Error: ${e.message}",
+                Toast.LENGTH_SHORT
+            ).show()
+        } finally {
+            binding.loadingIndicator.visibility = View.GONE
+        }
     }
 
     override fun onScheduleClick(schedule: Schedule) {
-
         val intent = Intent(this, ListStudentActivity::class.java)
-        intent.putExtra("subject_code", schedule.subjectCode)
-        intent.putExtra("subject_name", schedule.subjectName)
+        intent.putExtra("class_code", schedule.classCode)
+        intent.putExtra("class_name", schedule.className)
         intent.putExtra("room", schedule.room)
-        intent.putExtra("time", schedule.time)
+        intent.putExtra("time", "${schedule.startTime} - ${schedule.endTime}")
         startActivity(intent)
     }
 

@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.terraconnection.api.RetrofitClient
 import com.example.terraconnection.data.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

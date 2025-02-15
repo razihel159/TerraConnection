@@ -1,6 +1,5 @@
 package com.example.terraconnection
 
-import ProfSchedAdapter
 import android.os.Bundle
 import android.widget.CalendarView
 import android.widget.Toast
@@ -8,7 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.terraconnection.data.ClassSchedule
+import com.example.terraconnection.data.Schedule
+import com.example.terraconnection.api.RetrofitClient
+import com.example.terraconnection.adapters.ProfSchedAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,7 +20,7 @@ class CalendarProf : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var scheduleAdapter: ProfSchedAdapter
     private lateinit var calendarView: CalendarView
-    private var scheduleList: List<ClassSchedule> = emptyList() // ✅ Stores fetched schedules
+    private var scheduleList: List<Schedule> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,12 +33,11 @@ class CalendarProf : AppCompatActivity() {
         scheduleAdapter = ProfSchedAdapter(emptyList())
         recyclerView.adapter = scheduleAdapter
 
-        fetchSchedule() // ✅ Fetch schedule data when activity starts
+        fetchSchedule()
 
-        // ✅ Calendar Date Selection Listener
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             val selectedDate = "%04d-%02d-%02d".format(year, month + 1, dayOfMonth)
-            filterSchedule(selectedDate) // ✅ Filter schedules based on selected date
+            filterSchedule(selectedDate)
         }
     }
 
@@ -46,29 +46,25 @@ class CalendarProf : AppCompatActivity() {
             try {
                 val token = SessionManager.getToken(this@CalendarProf)
 
-                if (token.isNullOrEmpty()) {
+                if (token == null) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@CalendarProf, "No token found, please log in again", Toast.LENGTH_SHORT).show()
                     }
                     return@launch
                 }
 
-                val response = RetrofitClient.apiService.getStudentSchedule("Bearer $token")
+                val response = RetrofitClient.apiService.getProfessorSchedule("Bearer $token")
 
-                if (response.isSuccessful) {
-                    val schedules = response.body()
-                    if (!schedules.isNullOrEmpty()) {
-                        scheduleList = schedules // ✅ Store schedules in global list
-                        withContext(Dispatchers.Main) {
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val scheduleResponse = response.body()
+                        if (scheduleResponse != null && scheduleResponse.schedule.isNotEmpty()) {
+                            scheduleList = scheduleResponse.schedule
                             Toast.makeText(this@CalendarProf, "Schedule Loaded!", Toast.LENGTH_SHORT).show()
-                        }
-                    } else {
-                        withContext(Dispatchers.Main) {
+                        } else {
                             Toast.makeText(this@CalendarProf, "No schedule available", Toast.LENGTH_SHORT).show()
                         }
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
+                    } else {
                         Toast.makeText(this@CalendarProf, "Failed to fetch schedule", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -81,7 +77,26 @@ class CalendarProf : AppCompatActivity() {
     }
 
     private fun filterSchedule(selectedDate: String) {
-        val filteredSchedules = scheduleList.filter { it.date == selectedDate }
+        val filteredSchedules = scheduleList.filter { schedule ->
+            schedule.scheduleDay.split(",").any { day ->
+                val calendar = Calendar.getInstance()
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val date = dateFormat.parse(selectedDate)
+                calendar.time = date
+                val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+                val selectedDay = when (dayOfWeek) {
+                    Calendar.MONDAY -> "Mon"
+                    Calendar.TUESDAY -> "Tue"
+                    Calendar.WEDNESDAY -> "Wed"
+                    Calendar.THURSDAY -> "Thu"
+                    Calendar.FRIDAY -> "Fri"
+                    Calendar.SATURDAY -> "Sat"
+                    Calendar.SUNDAY -> "Sun"
+                    else -> ""
+                }
+                day.trim() == selectedDay
+            }
+        }
 
         if (filteredSchedules.isNotEmpty()) {
             scheduleAdapter.updateList(filteredSchedules)

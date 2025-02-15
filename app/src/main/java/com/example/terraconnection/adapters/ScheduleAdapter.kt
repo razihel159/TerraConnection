@@ -1,47 +1,65 @@
 package com.example.terraconnection.adapters
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.terraconnection.R
+import com.example.terraconnection.databinding.ItemScheduleBinding
 import com.example.terraconnection.data.Schedule
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class ScheduleAdapter(
-    private val scheduleList: List<Schedule>,
+    private val schedules: List<Schedule>,
     private val listener: OnScheduleClickListener
-) : RecyclerView.Adapter<ScheduleAdapter.ScheduleViewHolder>() {
+) : RecyclerView.Adapter<ScheduleAdapter.ViewHolder>() {
 
-    inner class ScheduleViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val tvSubjectCode: TextView = view.findViewById(R.id.tvSubjectCode)
-        val tvSubjectName: TextView = view.findViewById(R.id.tvSubjectName)
-        val tvRoom: TextView = view.findViewById(R.id.tvRoom)
-        val tvTime: TextView = view.findViewById(R.id.tvTime)
+    private val timeInputFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+    private val timeOutputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
 
-        init {
-            view.setOnClickListener {
-                val position = adapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    listener.onScheduleClick(scheduleList[position])
+    private fun formatTime(time: String): String {
+        return try {
+            val date = timeInputFormat.parse(time)
+            date?.let { timeOutputFormat.format(it) } ?: time
+        } catch (e: Exception) {
+            time
+        }
+    }
+
+    inner class ViewHolder(private val binding: ItemScheduleBinding) : 
+        RecyclerView.ViewHolder(binding.root) {
+        
+        fun bind(schedule: Schedule) {
+            binding.apply {
+                classCode.text = schedule.class_code
+                className.text = schedule.class_name
+                room.text = schedule.room
+                
+                // Format start and end times
+                val formattedStartTime = formatTime(schedule.start_time)
+                val formattedEndTime = formatTime(schedule.end_time)
+                time.text = "$formattedStartTime - $formattedEndTime"
+                
+                scheduleDay.text = schedule.schedule
+
+                root.setOnClickListener {
+                    listener.onScheduleClick(schedule)
                 }
             }
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ScheduleViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_schedule, parent, false)
-        return ScheduleViewHolder(view)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = ItemScheduleBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return ViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: ScheduleViewHolder, position: Int) {
-        val schedule = scheduleList[position]
-        holder.tvSubjectCode.text = schedule.subjectCode
-        holder.tvSubjectName.text = schedule.subjectName
-        holder.tvRoom.text = "Room: ${schedule.room}"
-        holder.tvTime.text = schedule.time
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.bind(schedules[position])
     }
 
-    override fun getItemCount(): Int = scheduleList.size
+    override fun getItemCount() = schedules.size
 }
