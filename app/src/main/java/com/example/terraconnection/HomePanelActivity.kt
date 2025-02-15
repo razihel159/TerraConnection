@@ -45,6 +45,7 @@ class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
 
         // ✅ Set up RecyclerView
         lifecycleScope.launch {
+            fetchUserDetails()
             setupRecyclerView()
         }
 
@@ -63,6 +64,28 @@ class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
             startActivity(intent)
         }
     }
+
+    private suspend fun fetchUserDetails() {
+        try {
+            val token = SessionManager.getToken(this)?.let { "Bearer $it" }
+                ?: throw Exception("No authentication token found")
+
+            val response = apiService.getUsers(token)
+
+            if (response.isSuccessful) {
+                val user = response.body()
+                if (user != null) {
+                    val fullName = "${user.first_name} ${user.last_name}"
+                    binding.loginGreeting.text = "Hello $fullName"
+                }
+            } else {
+                Log.e("User Fetch", "Failed: ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Log.e("User Fetch", "Error: ${e.message}")
+        }
+    }
+
 
     private suspend fun setupRecyclerView() {
         try {
