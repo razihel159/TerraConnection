@@ -10,7 +10,7 @@ import com.example.terraconnection.data.Schedule
 
 class ScheduleAdapter(
     private val scheduleList: List<Schedule>,
-    private val listener: OnScheduleClickListener // ✅ Add this listener
+    private val listener: OnScheduleClickListener
 ) : RecyclerView.Adapter<ScheduleAdapter.ScheduleViewHolder>() {
 
     inner class ScheduleViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -23,7 +23,7 @@ class ScheduleAdapter(
             view.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
-                    listener.onScheduleClick(scheduleList[position]) // ✅ Notify click listener
+                    listener.onScheduleClick(scheduleList[position])
                 }
             }
         }

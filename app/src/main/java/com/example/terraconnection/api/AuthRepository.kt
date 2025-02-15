@@ -5,7 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class AuthRepository {
-    val api = RetrofitClient.instance.create(ApiService::class.java)
+    val api = RetrofitClient.apiService
 
     suspend fun login(email: String, password: String): Result<LoginResponse> {
         return withContext(Dispatchers.IO) {
