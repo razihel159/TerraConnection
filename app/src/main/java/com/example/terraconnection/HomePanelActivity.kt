@@ -35,12 +35,12 @@ class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
         setupRecyclerView()
 
         profileIconButton.setOnClickListener {
-            val intent = Intent(this, Profile::class.java)
+            val intent = Intent(this, StudentProfile::class.java)
             startActivity(intent)
         }
 
         binding.calendarHistory.setOnClickListener {
-            val intent = Intent(this, AttendanceLogs::class.java)
+            val intent = Intent(this, CalendarProf::class.java)
             startActivity(intent)
         }
 

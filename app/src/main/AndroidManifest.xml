@@ -18,13 +18,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TerraConnection"
         tools:targetApi="31">
-
-
         <activity
-            android:name=".AttendanceLogs"
+            android:name=".CalendarProf"
             android:exported="false" />
         <activity
-            android:name=".Profile"
+            android:name=".StudentProfile"
+            android:exported="false" />
+        <activity
+            android:name=".AttendanceLogs"
             android:exported="false" />
         <activity
             android:name=".ListStudentActivity"
@@ -41,15 +42,16 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-
         <activity
             android:name=".LoginPageActivity"
             android:exported="true"
             android:theme="@style/Theme.App.SplashScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>
+
 </manifest>
