@@ -1,6 +1,5 @@
-package com.example.terraconnection
+package com.example.terraconnection.activities
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -10,6 +9,8 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.terraconnection.R
+import com.example.terraconnection.SessionManager
 import com.example.terraconnection.api.RetrofitClient
 import com.example.terraconnection.data.User
 import kotlinx.coroutines.Dispatchers

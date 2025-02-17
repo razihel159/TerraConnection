@@ -1,4 +1,4 @@
-package com.example.terraconnection
+package com.example.terraconnection.activities
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

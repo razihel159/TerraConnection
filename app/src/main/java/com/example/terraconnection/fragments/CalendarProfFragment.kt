@@ -1,41 +1,52 @@
-package com.example.terraconnection
+package com.example.terraconnection.fragments
 
 import android.os.Bundle
-import android.widget.CalendarView
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.terraconnection.data.Schedule
-import com.example.terraconnection.api.RetrofitClient
+import com.example.terraconnection.R
+import com.example.terraconnection.SessionManager
 import com.example.terraconnection.adapters.ProfSchedAdapter
+import com.example.terraconnection.api.RetrofitClient
+import com.example.terraconnection.data.Schedule
+import com.example.terraconnection.databinding.FragmentCalendarProfBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
-class CalendarProf : AppCompatActivity() {
-    private lateinit var recyclerView: RecyclerView
+class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
+    private var _binding: FragmentCalendarProfBinding? = null
+    private val binding get() = _binding!!
     private lateinit var scheduleAdapter: ProfSchedAdapter
-    private lateinit var calendarView: CalendarView
     private var scheduleList: List<Schedule> = emptyList()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_calendar_prof)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _binding = FragmentCalendarProfBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-        recyclerView = findViewById(R.id.profSched)
-        calendarView = findViewById(R.id.schedViewCal)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        // Set up RecyclerView
+        binding.profSched.layoutManager = LinearLayoutManager(requireContext())
         scheduleAdapter = ProfSchedAdapter(emptyList())
-        recyclerView.adapter = scheduleAdapter
+        binding.profSched.adapter = scheduleAdapter
 
+        // Fetch schedule data
         fetchSchedule()
 
-        calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
+        // Calendar date change listener
+        binding.schedViewCal.setOnDateChangeListener { _, year, month, dayOfMonth ->
             val selectedDate = "%04d-%02d-%02d".format(year, month + 1, dayOfMonth)
             filterSchedule(selectedDate)
         }
@@ -44,33 +55,31 @@ class CalendarProf : AppCompatActivity() {
     private fun fetchSchedule() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val token = SessionManager.getToken(this@CalendarProf)
-
+                val token = SessionManager.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@CalendarProf, "No token found, please log in again", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "No token found, please log in again", Toast.LENGTH_SHORT).show()
                     }
                     return@launch
                 }
 
                 val response = RetrofitClient.apiService.getProfessorSchedule("Bearer $token")
-
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
                         val scheduleResponse = response.body()
                         if (scheduleResponse != null && scheduleResponse.schedule.isNotEmpty()) {
                             scheduleList = scheduleResponse.schedule
-                            Toast.makeText(this@CalendarProf, "Schedule Loaded!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Schedule Loaded!", Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(this@CalendarProf, "No schedule available", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "No schedule available", Toast.LENGTH_SHORT).show()
                         }
                     } else {
-                        Toast.makeText(this@CalendarProf, "Failed to fetch schedule", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Failed to fetch schedule", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@CalendarProf, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -100,10 +109,15 @@ class CalendarProf : AppCompatActivity() {
 
         if (filteredSchedules.isNotEmpty()) {
             scheduleAdapter.updateList(filteredSchedules)
-            recyclerView.visibility = RecyclerView.VISIBLE
+            binding.profSched.visibility = View.VISIBLE
         } else {
-            recyclerView.visibility = RecyclerView.GONE
-            Toast.makeText(this, "No schedule for $selectedDate", Toast.LENGTH_SHORT).show()
+            binding.profSched.visibility = View.GONE
+            Toast.makeText(requireContext(), "No schedule for $selectedDate", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

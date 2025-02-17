@@ -1,13 +1,10 @@
-package com.example.terraconnection
+package com.example.terraconnection.activities
 
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.terraconnection.databinding.ActivityListStudentBinding
 
 class ListStudentActivity : AppCompatActivity() {

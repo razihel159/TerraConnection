@@ -1,77 +1,73 @@
-package com.example.terraconnection
+package com.example.terraconnection.fragments
 
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.*
 import android.widget.ImageButton
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.terraconnection.R
+import com.example.terraconnection.SessionManager
+import com.example.terraconnection.activities.StudentProfile
 import com.example.terraconnection.adapters.ScheduleAdapter
 import com.example.terraconnection.adapters.OnScheduleClickListener
-import com.example.terraconnection.data.Schedule
-import com.example.terraconnection.databinding.ActivityHomePanelBinding
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import android.view.View
-import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-import com.example.terraconnection.api.ApiService
 import com.example.terraconnection.api.RetrofitClient
+import com.example.terraconnection.data.Schedule
+import com.example.terraconnection.databinding.FragmentHomePanelBinding
+import kotlinx.coroutines.launch
 import android.util.Log
+import com.example.terraconnection.activities.ListStudentActivity
 
-class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
-    private lateinit var binding: ActivityHomePanelBinding
-    
-    private val apiService: ApiService = RetrofitClient.apiService
+class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClickListener {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        binding = ActivityHomePanelBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    private var _binding: FragmentHomePanelBinding? = null
+    private val binding get() = _binding!!
+    private val apiService = RetrofitClient.apiService
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _binding = FragmentHomePanelBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         val profileIconButton: ImageButton = binding.studentProfile
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+        // Apply window insets to the main layout
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // ✅ Set up RecyclerView
+        // Set up RecyclerView and fetch user details
         lifecycleScope.launch {
             fetchUserDetails()
             setupRecyclerView()
         }
 
+        // Profile icon button action
         profileIconButton.setOnClickListener {
-            val intent = Intent(this, StudentProfile::class.java)
-            startActivity(intent)
-        }
-
-        binding.calendarHistory.setOnClickListener {
-            val intent = Intent(this, CalendarProf::class.java)
-            startActivity(intent)
-        }
-
-        binding.gpsLocation.setOnClickListener {
-            val intent = Intent(this, MapsFragment::class.java)
+            val intent = Intent(requireContext(), StudentProfile::class.java)
             startActivity(intent)
         }
     }
 
     private suspend fun fetchUserDetails() {
         try {
-            val token = SessionManager.getToken(this)?.let { "Bearer $it" }
+            val token = SessionManager.getToken(requireContext())?.let { "Bearer $it" }
                 ?: throw Exception("No authentication token found")
 
             val response = apiService.getUsers(token)
-
             if (response.isSuccessful) {
                 val user = response.body()
                 if (user != null) {
@@ -86,16 +82,17 @@ class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
         }
     }
 
-
     private suspend fun setupRecyclerView() {
         try {
             binding.loadingIndicator.visibility = View.VISIBLE
-
-            val token = SessionManager.getToken(this)?.let { "Bearer $it" }
+            val token = SessionManager.getToken(requireContext())?.let { "Bearer $it" }
                 ?: throw Exception("No authentication token found")
-            
-            val role = SessionManager.getRole(this)
-            
+            val role = SessionManager.getRole(requireContext())
+
+            if (role == "professor") {
+                binding.subjectNotification.visibility = View.GONE
+            }
+
             val scheduleResponse = when (role) {
                 "professor" -> apiService.getProfessorSchedule(token)
                 else -> apiService.getStudentSchedule(token)
@@ -104,7 +101,6 @@ class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
             if (scheduleResponse.isSuccessful) {
                 val scheduleList: List<Schedule> = scheduleResponse.body()?.schedule ?: emptyList()
                 Log.d("Schedule", "Received schedules: $scheduleList")
-                
                 if (scheduleList.isNotEmpty()) {
                     val firstSchedule = scheduleList[0]
                     Log.d("Schedule", """
@@ -115,24 +111,23 @@ class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
                         Time: ${firstSchedule.startTime} - ${firstSchedule.endTime}
                     """.trimIndent())
                 }
-
                 val adapter = ScheduleAdapter(scheduleList, this)
                 binding.subjectCard.layoutManager = LinearLayoutManager(
-                    this,
+                    requireContext(),
                     LinearLayoutManager.HORIZONTAL,
                     false
                 )
                 binding.subjectCard.adapter = adapter
             } else {
                 Toast.makeText(
-                    this,
+                    requireContext(),
                     "Failed to load schedule: ${scheduleResponse.message()}",
                     Toast.LENGTH_SHORT
                 ).show()
             }
         } catch (e: Exception) {
             Toast.makeText(
-                this,
+                requireContext(),
                 "Error: ${e.message}",
                 Toast.LENGTH_SHORT
             ).show()
@@ -142,7 +137,7 @@ class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
     }
 
     override fun onScheduleClick(schedule: Schedule) {
-        val intent = Intent(this, ListStudentActivity::class.java)
+        val intent = Intent(requireContext(), ListStudentActivity::class.java)
         intent.putExtra("class_code", schedule.classCode)
         intent.putExtra("class_name", schedule.className)
         intent.putExtra("room", schedule.room)
@@ -153,10 +148,14 @@ class HomePanelActivity : AppCompatActivity(), OnScheduleClickListener {
     override fun onResume() {
         super.onResume()
         // Retrieve notification from SharedPreferences
-        val sharedPreferences = getSharedPreferences("TerraPrefs", Context.MODE_PRIVATE)
+        val sharedPreferences = requireContext().getSharedPreferences("TerraPrefs", Context.MODE_PRIVATE)
         val notificationMessage = sharedPreferences.getString("notification_message", "No notifications yet.")
-
         // Update UI
         binding.studentNotification.text = notificationMessage
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

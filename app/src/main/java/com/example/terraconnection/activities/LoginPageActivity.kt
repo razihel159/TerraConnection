@@ -1,4 +1,4 @@
-package com.example.terraconnection
+package com.example.terraconnection.activities
 
 import LoginViewModel
 import android.content.Intent
@@ -9,6 +9,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Observer
+import com.example.terraconnection.SessionManager
 import com.example.terraconnection.databinding.ActivityLoginPageBinding
 
 class LoginPageActivity : AppCompatActivity() {
