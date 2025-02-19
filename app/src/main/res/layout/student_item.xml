@@ -8,29 +8,6 @@
     android:layout_marginVertical="4dp"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-<!--    <RelativeLayout-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:padding="16dp"-->
-<!--        tools:ignore="MissingPrefix">-->
-
-<!--        <TextView-->
-<!--            android:id="@+id/studentName"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_centerVertical="true"-->
-<!--            android:text="Student Name"-->
-<!--            android:textSize="16sp"-->
-<!--            android:textStyle="bold" />-->
-
-<!--        <View-->
-<!--            android:id="@+id/statusIndicator"-->
-<!--            android:layout_width="12dp"-->
-<!--            android:layout_height="12dp"-->
-<!--            android:layout_alignParentEnd="true"-->
-<!--            android:layout_centerVertical="true"-->
-<!--            android:background="@drawable/status_indicator" />-->
-<!--    </RelativeLayout>-->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout"

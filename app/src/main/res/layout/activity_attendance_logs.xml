@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@color/violet">
 
     <!-- Attendance Log Display -->
     <com.google.android.material.card.MaterialCardView
-
-    android:layout_width="match_parent"
+        android:id="@+id/cardAttendance"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        app:cardElevation="4dp"
+        android:padding="12dp"
         app:cardCornerRadius="8dp"
-        android:padding="12dp">
+        app:cardElevation="4dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -31,7 +33,7 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
-                android:paddingBottom="4dp"/>
+                android:paddingBottom="4dp" />
 
             <!-- Date -->
             <TextView
@@ -41,7 +43,7 @@
                 android:text="Date: --/--/----"
                 android:textSize="16sp"
                 android:textColor="@android:color/darker_gray"
-                android:paddingBottom="4dp"/>
+                android:paddingBottom="4dp" />
 
             <!-- Time -->
             <TextView
@@ -50,7 +52,7 @@
                 android:layout_height="wrap_content"
                 android:text="Time: --:-- --"
                 android:textSize="16sp"
-                android:textColor="@android:color/darker_gray"/>
+                android:textColor="@android:color/darker_gray" />
 
         </LinearLayout>
 

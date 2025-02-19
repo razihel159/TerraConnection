@@ -21,6 +21,7 @@ import com.example.terraconnection.data.Schedule
 import com.example.terraconnection.databinding.FragmentHomePanelBinding
 import kotlinx.coroutines.launch
 import android.util.Log
+import com.example.terraconnection.activities.AttendanceLogs
 import com.example.terraconnection.activities.ListStudentActivity
 
 class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClickListener {
@@ -47,6 +48,24 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+
+        // Determine user role from session manager
+        val role = SessionManager.getRole(requireContext())
+
+        // Remove (hide) student status layout when role is "student"
+        if (role == "student") {
+            binding.studentStatus.visibility = View.GONE
+        }
+
+        if (role == "guardian") {
+            binding.notifyButton.visibility = View.GONE
+        }
+
+        // Make Attendance Logs clickable to open another activity
+        binding.attendanceHistory.setOnClickListener {
+            val intent = Intent(requireContext(), AttendanceLogs::class.java)
+            startActivity(intent)
         }
 
         // Set up RecyclerView and fetch user details
@@ -89,6 +108,7 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                 ?: throw Exception("No authentication token found")
             val role = SessionManager.getRole(requireContext())
 
+            // Hide notification section for professor role
             if (role == "professor") {
                 binding.subjectNotification.visibility = View.GONE
             }
