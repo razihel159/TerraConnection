@@ -19,7 +19,6 @@ class ListStudentActivity : AppCompatActivity() {
 
         sharedPreferences = getSharedPreferences("TerraPrefs", Context.MODE_PRIVATE)
 
-        // Handle notify button click
         binding.studentList.adapter = StudentAdapter { studentName ->
             sendNotification(studentName)
         }

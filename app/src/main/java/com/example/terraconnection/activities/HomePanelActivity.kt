@@ -34,7 +34,6 @@ class HomePanelActivity : AppCompatActivity() {
 
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
 
-        // Load HomeFragment initially
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, HomePanelFragment())
             .commit()

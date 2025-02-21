@@ -43,17 +43,14 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
 
         val profileIconButton: ImageButton = binding.studentProfile
 
-        // Apply window insets to the main layout
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // Determine user role from session manager
         val role = SessionManager.getRole(requireContext())
 
-        // Remove (hide) student status layout when role is "student"
         if (role == "student") {
             binding.studentStatus.visibility = View.GONE
         }
@@ -61,20 +58,23 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
         if (role == "guardian") {
             binding.notifyButton.visibility = View.GONE
         }
-
-        // Make Attendance Logs clickable to open another activity
-        binding.attendanceHistory.setOnClickListener {
-            val intent = Intent(requireContext(), AttendanceLogs::class.java)
-            startActivity(intent)
+        if (role == "guardian") {
+            binding.attendanceLog.visibility = View.GONE
         }
 
-        // Set up RecyclerView and fetch user details
+        if (role == "student" || role == "professor") {
+            binding.attendanceHistory.setOnClickListener {
+                val intent = Intent(requireContext(), AttendanceLogs::class.java)
+                startActivity(intent)
+            }
+        }
+
+
         lifecycleScope.launch {
             fetchUserDetails()
             setupRecyclerView()
         }
 
-        // Profile icon button action
         profileIconButton.setOnClickListener {
             val intent = Intent(requireContext(), StudentProfile::class.java)
             startActivity(intent)
