@@ -1,4 +1,7 @@
 package com.example.terraconnection.data
+import kotlinx.parcelize.Parcelize
+
+import android.os.Parcelable
 
 data class LoginRequest(
     val email: String,
@@ -50,5 +53,13 @@ data class ClassSchedule(
     val time: String,
     val date: String
 )
+
+@Parcelize
+data class Student(
+    val id: Int,
+    val name: String,
+    val onCampus: Boolean
+) : Parcelable
+
 
 

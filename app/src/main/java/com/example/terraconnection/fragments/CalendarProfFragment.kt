@@ -1,5 +1,6 @@
 package com.example.terraconnection.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.terraconnection.R
 import com.example.terraconnection.SessionManager
+import com.example.terraconnection.activities.ListStudentActivity
 import com.example.terraconnection.adapters.ProfSchedAdapter
 import com.example.terraconnection.api.RetrofitClient
 import com.example.terraconnection.data.Schedule
@@ -29,7 +31,7 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentCalendarProfBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -37,15 +39,17 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Set up RecyclerView
+        // ✅ Set up RecyclerView with click listener
         binding.profSched.layoutManager = LinearLayoutManager(requireContext())
-        scheduleAdapter = ProfSchedAdapter(emptyList())
+        scheduleAdapter = ProfSchedAdapter(emptyList()) { selectedSchedule ->
+            navigateToListStudentActivity(selectedSchedule)
+        }
         binding.profSched.adapter = scheduleAdapter
 
-        // Fetch schedule data
+        // ✅ Fetch schedule data
         fetchSchedule()
 
-        // Calendar date change listener
+        // ✅ Calendar date change listener
         binding.schedViewCal.setOnDateChangeListener { _, year, month, dayOfMonth ->
             val selectedDate = "%04d-%02d-%02d".format(year, month + 1, dayOfMonth)
             filterSchedule(selectedDate)
@@ -69,6 +73,7 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
                         val scheduleResponse = response.body()
                         if (scheduleResponse != null && scheduleResponse.schedule.isNotEmpty()) {
                             scheduleList = scheduleResponse.schedule
+                            scheduleAdapter.updateList(scheduleList) // ✅ Update adapter
                             Toast.makeText(requireContext(), "Schedule Loaded!", Toast.LENGTH_SHORT).show()
                         } else {
                             Toast.makeText(requireContext(), "No schedule available", Toast.LENGTH_SHORT).show()
@@ -114,6 +119,14 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
             binding.profSched.visibility = View.GONE
             Toast.makeText(requireContext(), "No schedule for $selectedDate", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun navigateToListStudentActivity(schedule: Schedule) {
+        val intent = Intent(requireContext(), ListStudentActivity::class.java).apply {
+            putExtra("classCode", schedule.classCode)
+            putExtra("className", schedule.className)
+        }
+        startActivity(intent)
     }
 
     override fun onDestroyView() {

@@ -8,8 +8,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.terraconnection.R
 import com.example.terraconnection.data.Schedule
 
-class ProfSchedAdapter(private var schedules: List<Schedule>) : 
-    RecyclerView.Adapter<ProfSchedAdapter.ViewHolder>() {
+class ProfSchedAdapter(
+    private var schedules: List<Schedule>,
+    private val onItemClick: (Schedule) -> Unit
+) : RecyclerView.Adapter<ProfSchedAdapter.ViewHolder>() {
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val classCode: TextView = itemView.findViewById(R.id.classCode)
@@ -30,6 +32,10 @@ class ProfSchedAdapter(private var schedules: List<Schedule>) :
         holder.className.text = schedule.className
         holder.room.text = schedule.room
         holder.time.text = "${schedule.startTime} - ${schedule.endTime}"
+
+        holder.itemView.setOnClickListener {
+            onItemClick(schedule) // ✅ Trigger click event
+        }
     }
 
     override fun getItemCount() = schedules.size
