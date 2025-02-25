@@ -25,6 +25,7 @@ import com.example.terraconnection.R
 import com.example.terraconnection.SessionManager
 import com.example.terraconnection.fragments.CalendarProfFragment
 import com.example.terraconnection.fragments.HomePanelFragment
+import com.example.terraconnection.fragments.ProfileFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class HomePanelActivity : AppCompatActivity() {
@@ -42,6 +43,8 @@ class HomePanelActivity : AppCompatActivity() {
             val selectedFragment = when (item.itemId) {
                 R.id.nav_home -> HomePanelFragment()
                 R.id.nav_calendar -> CalendarProfFragment()
+                R.id.nav_profile -> ProfileFragment()
+                R.id.nav_location -> MapsFragment()
                 else -> null
             }
 

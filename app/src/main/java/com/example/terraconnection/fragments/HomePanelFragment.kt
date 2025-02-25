@@ -13,7 +13,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.terraconnection.R
 import com.example.terraconnection.SessionManager
-import com.example.terraconnection.activities.StudentProfile
 import com.example.terraconnection.adapters.ScheduleAdapter
 import com.example.terraconnection.adapters.OnScheduleClickListener
 import com.example.terraconnection.api.RetrofitClient
@@ -41,7 +40,6 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val profileIconButton: ImageButton = binding.studentProfile
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -73,11 +71,6 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
         lifecycleScope.launch {
             fetchUserDetails()
             setupRecyclerView()
-        }
-
-        profileIconButton.setOnClickListener {
-            val intent = Intent(requireContext(), StudentProfile::class.java)
-            startActivity(intent)
         }
     }
 
@@ -171,7 +164,6 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
         val sharedPreferences = requireContext().getSharedPreferences("TerraPrefs", Context.MODE_PRIVATE)
         val notificationMessage = sharedPreferences.getString("notification_message", "No notifications yet.")
         // Update UI
-        binding.studentNotification.text = notificationMessage
     }
 
     override fun onDestroyView() {

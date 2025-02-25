@@ -18,9 +18,10 @@
         android:theme="@style/Theme.TerraConnection"
         tools:targetApi="31">
 
-        <activity
-            android:name=".activities.StudentProfile"
-            android:exported="false" />
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAN6ojDob1QoRmTQJHfmzba-w3NArl9qKE"/>
+
         <activity
             android:name=".activities.AttendanceLogs"
             android:exported="false" />
