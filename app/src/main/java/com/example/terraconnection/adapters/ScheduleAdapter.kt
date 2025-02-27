@@ -9,7 +9,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class ScheduleAdapter(
-    private val schedules: List<Schedule>,
+    private var schedules: MutableList<Schedule>, // ✅ Use MutableList
     private val listener: OnScheduleClickListener
 ) : RecyclerView.Adapter<ScheduleAdapter.ViewHolder>() {
 
@@ -25,20 +25,19 @@ class ScheduleAdapter(
         }
     }
 
-    inner class ViewHolder(private val binding: ItemScheduleBinding) : 
+    inner class ViewHolder(private val binding: ItemScheduleBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        
+
         fun bind(schedule: Schedule) {
             binding.apply {
                 classCode.text = schedule.class_code
                 className.text = schedule.class_name
                 room.text = schedule.room
-                
-                // Format start and end times
+
                 val formattedStartTime = formatTime(schedule.start_time)
                 val formattedEndTime = formatTime(schedule.end_time)
                 time.text = "$formattedStartTime - $formattedEndTime"
-                
+
                 scheduleDay.text = schedule.schedule
 
                 root.setOnClickListener {
@@ -62,4 +61,12 @@ class ScheduleAdapter(
     }
 
     override fun getItemCount() = schedules.size
+
+    // ✅ Fix: Use MutableList and update list properly
+    fun updateList(newList: List<Schedule>) {
+        schedules.clear()   // Clear old items
+        schedules.addAll(newList)  // Add new items
+        notifyDataSetChanged()  // Refresh RecyclerView
+    }
 }
+

@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import android.util.Log
 import com.example.terraconnection.activities.AttendanceLogs
 import com.example.terraconnection.activities.ListStudentActivity
+import com.example.terraconnection.activities.NotificationActivity
 
 class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClickListener {
 
@@ -65,6 +66,11 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                 val intent = Intent(requireContext(), AttendanceLogs::class.java)
                 startActivity(intent)
             }
+        }
+
+        binding.subjectNotification.setOnClickListener {
+            val intent = Intent(requireContext(), NotificationActivity::class.java)
+            startActivity(intent)
         }
 
 
@@ -124,7 +130,7 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                         Time: ${firstSchedule.startTime} - ${firstSchedule.endTime}
                     """.trimIndent())
                 }
-                val adapter = ScheduleAdapter(scheduleList, this)
+                val adapter = ScheduleAdapter(scheduleList.toMutableList(), this)
                 binding.subjectCard.layoutManager = LinearLayoutManager(
                     requireContext(),
                     LinearLayoutManager.HORIZONTAL,

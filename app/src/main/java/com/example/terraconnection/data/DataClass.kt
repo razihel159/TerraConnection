@@ -61,5 +61,9 @@ data class Student(
     val onCampus: Boolean
 ) : Parcelable
 
+data class Notification(
+    val message: String
+)
+
 
 
