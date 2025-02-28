@@ -74,6 +74,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("com.google.android.material:material:1.9.0")
     implementation("de.hdodenhof:circleimageview:3.1.0")
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.5")
 
     // ✅ Retrofit (Networking)
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

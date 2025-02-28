@@ -57,8 +57,9 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
         if (role == "guardian") {
             binding.notifyButton.visibility = View.GONE
         }
-        if (role == "guardian") {
+        if (role == "professor") {
             binding.attendanceLog.visibility = View.GONE
+            binding.studentStatus.visibility = View.GONE
         }
 
         if (role == "student" || role == "professor") {

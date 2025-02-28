@@ -58,7 +58,10 @@ data class ClassSchedule(
 data class Student(
     val id: Int,
     val name: String,
-    val onCampus: Boolean
+    val onCampus: Boolean,
+    val role: String,
+    val statusIndicator: Int,
+    val notifyIcon: Int
 ) : Parcelable
 
 data class Notification(

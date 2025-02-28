@@ -6,17 +6,18 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.ListStudentActivity">
+    tools:context=".activities.ListStudentActivity"
+    android:background="@color/violet">
 
     <!-- Header -->
     <TextView
         android:id="@+id/headerTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/violet"
+        android:background="@color/white"
         android:padding="16dp"
         android:text="Student Attendance"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"

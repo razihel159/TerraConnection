@@ -25,7 +25,3 @@ interface ApiService {
     @GET("api/professor/schedule")
     suspend fun getProfessorSchedule(@Header("Authorization") token: String): Response<ScheduleResponse>
 }
-
-data class ScheduleResponse(
-    val schedule: List<Schedule>
-)

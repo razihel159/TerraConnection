@@ -3,6 +3,7 @@ package com.example.terraconnection.activities
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,16 +24,20 @@ class ListStudentActivity : AppCompatActivity() {
 
         sharedPreferences = getSharedPreferences("TerraPrefs", Context.MODE_PRIVATE)
 
-        // Initialize RecyclerView
+        // Retrieve full student list from intent
+        studentList = intent.getParcelableArrayListExtra<Student>("studentList") ?: emptyList()
+        Log.d("ListStudentActivity", "Received students: $studentList")
+
+        // Setup RecyclerView
+        setupRecyclerView()
+    }
+
+    private fun setupRecyclerView() {
         binding.studentList.layoutManager = LinearLayoutManager(this)
-        studentAdapter = StudentAdapter(studentList) { studentName ->
-            sendNotification(studentName)
+        studentAdapter = StudentAdapter(studentList) { student ->
+            sendNotification(student.name)
         }
         binding.studentList.adapter = studentAdapter
-
-        // Retrieve student data from intent
-        studentList = intent.getParcelableArrayListExtra("studentList") ?: emptyList()
-        studentAdapter.updateList(studentList)
     }
 
     private fun sendNotification(studentName: String) {
