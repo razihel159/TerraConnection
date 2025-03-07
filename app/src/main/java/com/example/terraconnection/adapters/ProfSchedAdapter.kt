@@ -1,47 +1,78 @@
 package com.example.terraconnection.adapters
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.terraconnection.R
+import com.example.terraconnection.databinding.ItemScheduleBinding
 import com.example.terraconnection.data.Schedule
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ProfSchedAdapter(
-    private var schedules: List<Schedule>,
-    private val onItemClick: (Schedule) -> Unit
+    private var schedules: MutableList<Schedule>,
+    private val listener: OnScheduleClickListener
 ) : RecyclerView.Adapter<ProfSchedAdapter.ViewHolder>() {
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val classCode: TextView = itemView.findViewById(R.id.classCode)
-        val className: TextView = itemView.findViewById(R.id.className)
-        val room: TextView = itemView.findViewById(R.id.room)
-        val time: TextView = itemView.findViewById(R.id.time)
+    private val timeInputFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+    private val timeOutputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+
+    private fun formatTime(time: String): String {
+        return try {
+            val date = timeInputFormat.parse(time)
+            date?.let { timeOutputFormat.format(it) } ?: time
+        } catch (e: Exception) {
+            time
+        }
+    }
+
+    inner class ViewHolder(private val binding: ItemScheduleBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(schedule: Schedule) {
+            binding.apply {
+                classCode.text = schedule.class_code
+                className.text = schedule.class_name
+                room.text = schedule.room
+
+                val formattedStartTime = formatTime(schedule.start_time)
+                val formattedEndTime = formatTime(schedule.end_time)
+                time.text = "$formattedStartTime - $formattedEndTime"
+
+                scheduleDay.text = schedule.schedule
+
+                root.setOnClickListener {
+                    listener.onScheduleClick(schedule)
+                }
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_schedule, parent, false)
-        return ViewHolder(view)
+        val binding = ItemScheduleBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val schedule = schedules[position]
-        holder.classCode.text = schedule.classCode
-        holder.className.text = schedule.className
-        holder.room.text = schedule.room
-        holder.time.text = "${schedule.startTime} - ${schedule.endTime}"
-
-        holder.itemView.setOnClickListener {
-            onItemClick(schedule) // ✅ Trigger click event
-        }
+        holder.bind(schedules[position])
     }
 
     override fun getItemCount() = schedules.size
 
-    fun updateList(newList: List<Schedule>) {
-        schedules = newList
+    private var pendingUpdates: MutableList<Schedule> = mutableListOf()
+
+    fun setNewList(newList: List<Schedule>) {
+        pendingUpdates.clear()
+        pendingUpdates.addAll(newList)
+    }
+
+    fun applyUpdates() {
+        schedules.clear()
+        schedules.addAll(pendingUpdates)
         notifyDataSetChanged()
     }
 }
+
