@@ -12,7 +12,7 @@ import com.example.terraconnection.R
 import com.example.terraconnection.data.Student
 
 class StudentAdapter(
-    private val students: List<Student>,
+    private var students: List<Student>,
     private val onNotifyClick: (Student) -> Unit
 ) : RecyclerView.Adapter<StudentAdapter.StudentViewHolder>() {
 
@@ -41,4 +41,9 @@ class StudentAdapter(
     }
 
     override fun getItemCount(): Int = students.size
+
+    fun updateStudents(newStudents: List<Student>) {
+        students = newStudents
+        notifyDataSetChanged()
+    }
 }

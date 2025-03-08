@@ -158,6 +158,7 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
 
     override fun onScheduleClick(schedule: Schedule) {
         val intent = Intent(requireContext(), ListStudentActivity::class.java)
+        intent.putExtra("class_id", schedule.id)
         intent.putExtra("class_code", schedule.classCode)
         intent.putExtra("class_name", schedule.className)
         intent.putExtra("room", schedule.room)

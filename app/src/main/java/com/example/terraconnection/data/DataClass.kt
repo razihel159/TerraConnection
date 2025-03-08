@@ -68,5 +68,47 @@ data class Notification(
     val message: String
 )
 
+data class AttendanceResponse(
+    val date: String,
+    val classId: String,
+    val attendance: List<StudentAttendance>
+)
+
+data class StudentAttendance(
+    val studentId: Int,
+    val logs: List<AttendanceLog>,
+    val lastKnownLocation: GPSLocation?
+)
+
+data class AttendanceLog(
+    val user_id: Int,
+    val timestamp: String,
+    val type: String,
+    val user: User
+)
+
+data class GPSLocation(
+    val user_id: Int,
+    val latitude: Double,
+    val longitude: Double,
+    val timestamp: String
+)
+
+data class ClassEnrollmentResponse(
+    val enrollments: List<ClassEnrollment>
+)
+
+data class ClassEnrollment(
+    val studentId: Int,
+    val student: EnrolledStudent
+)
+
+data class EnrolledStudent(
+    val id: Int,
+    val firstName: String,
+    val lastName: String,
+    val email: String
+)
+
 
 

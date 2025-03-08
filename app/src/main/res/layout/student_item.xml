@@ -1,55 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:tools="http://schemas.android.com/tools"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="70dp"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="4dp">
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:minHeight="70dp">
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/statusIndicator"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:contentDescription="Attendance Status"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <TextView
             android:id="@+id/studentName"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="@id/constraintLayout"
-            app:layout_constraintStart_toStartOf="@id/constraintLayout"
-            app:layout_constraintTop_toTopOf="@id/constraintLayout"
-            android:text="Student Name"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginStart="12dp"/>
-
-        <View
-            android:id="@+id/statusIndicator"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            app:layout_constraintBottom_toBottomOf="@id/constraintLayout"
-            app:layout_constraintEnd_toEndOf="@id/constraintLayout"
-            app:layout_constraintTop_toTopOf="@id/constraintLayout"
-            android:background="@drawable/status_indicator"
-            android:layout_marginEnd="12dp"/>
+            android:textColor="@android:color/black"
+            app:layout_constraintStart_toEndOf="@id/statusIndicator"
+            app:layout_constraintEnd_toStartOf="@id/notifyButton"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <ImageButton
             android:id="@+id/notifyButton"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:src="@drawable/notification"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:scaleType="centerInside"
-            app:tint="@android:color/holo_red_dark"
-            app:layout_constraintEnd_toStartOf="@id/statusIndicator"
-            app:layout_constraintTop_toTopOf="@id/statusIndicator"
-            app:layout_constraintBottom_toBottomOf="@id/statusIndicator"
-            android:layout_marginEnd="8dp"
-            android:clickable="true"
-            android:focusable="true"/>
+            android:contentDescription="Send Notification"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.cardview.widget.CardView>
