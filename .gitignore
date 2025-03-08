@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+/rfid-backend
+rfid-backend
