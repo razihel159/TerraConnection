@@ -5,6 +5,9 @@ plugins {
 
     // ✅ Fix: Add Kotlin Parcelize plugin for Parcelable support
     id("kotlin-parcelize")
+
+    // Add Firebase plugin
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -93,5 +96,8 @@ dependencies {
     implementation("org.json:json:20210307")
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
-
+    // Add Firebase dependencies
+    implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
 }

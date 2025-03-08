@@ -14,6 +14,7 @@ import com.example.terraconnection.databinding.ActivityListStudentBinding
 import com.example.terraconnection.api.RetrofitClient
 import com.example.terraconnection.R
 import com.example.terraconnection.SessionManager
+import com.example.terraconnection.data.NotificationRequest
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.CoroutineScope
@@ -27,6 +28,7 @@ class ListStudentActivity : AppCompatActivity() {
     private lateinit var studentAdapter: StudentAdapter
     private var studentList: List<Student> = emptyList()
     private val apiService = RetrofitClient.apiService
+    private var currentClassId: String = "-1"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +42,7 @@ class ListStudentActivity : AppCompatActivity() {
 
         // Get class details from intent
         val classId = intent.getIntExtra("class_id", -1)
+        currentClassId = classId.toString()
         val classCode = intent.getStringExtra("class_code") ?: ""
         val className = intent.getStringExtra("class_name") ?: ""
         val room = intent.getStringExtra("room") ?: ""
@@ -49,6 +52,11 @@ class ListStudentActivity : AppCompatActivity() {
         binding.className.text = "$className ($classCode)"
         binding.roomText.text = "Room: $room"
         binding.timeText.text = "Time: $time"
+
+        // Setup notification button
+        binding.notifyAllButton.setOnClickListener {
+            sendNotificationToClass(className, room)
+        }
 
         if (classId == -1) {
             Toast.makeText(this, "Invalid class ID", Toast.LENGTH_SHORT).show()
@@ -66,9 +74,7 @@ class ListStudentActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         binding.studentList.layoutManager = LinearLayoutManager(this)
-        studentAdapter = StudentAdapter(studentList) { student ->
-            sendNotification(student.name)
-        }
+        studentAdapter = StudentAdapter(studentList)
         binding.studentList.adapter = studentAdapter
     }
 
@@ -183,9 +189,45 @@ class ListStudentActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendNotification(studentName: String) {
-        val message = "Reminder: $studentName, please attend your class!"
-        sharedPreferences.edit().putString("notification_message", message).apply()
-        Toast.makeText(this, "Notification sent!", Toast.LENGTH_SHORT).show()
+    private fun sendNotificationToClass(className: String, room: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val token = SessionManager.getToken(this@ListStudentActivity)?.let { "Bearer $it" }
+                    ?: throw Exception("No authentication token found")
+
+                val notificationRequest = NotificationRequest(
+                    classId = currentClassId,
+                    title = "Class Reminder",
+                    message = "Please proceed to $className class in Room $room"
+                )
+
+                val response = apiService.sendNotification(token, notificationRequest)
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(
+                            this@ListStudentActivity,
+                            "Notification sent to all students",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            this@ListStudentActivity,
+                            "Failed to send notification",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ListStudentActivity", "Error sending notification: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@ListStudentActivity,
+                        "Error sending notification: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
     }
 }

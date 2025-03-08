@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "415977451699",
+    "project_id": "terraconnection-58c3b",
+    "storage_bucket": "terraconnection-58c3b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:415977451699:android:c95aef1271b230c6d140c6",
+        "android_client_info": {
+          "package_name": "com.example.terraconnection"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsWOTOPx5UuERv1P6hzq2Q6lGninwUCzE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

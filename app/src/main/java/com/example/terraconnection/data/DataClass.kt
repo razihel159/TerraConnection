@@ -68,6 +68,16 @@ data class Notification(
     val message: String
 )
 
+data class NotificationRequest(
+    val classId: String,
+    val title: String,
+    val message: String
+)
+
+data class NotificationResponse(
+    val message: String
+)
+
 data class AttendanceResponse(
     val date: String,
     val classId: String,
@@ -108,6 +118,14 @@ data class EnrolledStudent(
     val firstName: String,
     val lastName: String,
     val email: String
+)
+
+data class FcmTokenRequest(
+    val fcm_token: String
+)
+
+data class MessageResponse(
+    val message: String
 )
 
 

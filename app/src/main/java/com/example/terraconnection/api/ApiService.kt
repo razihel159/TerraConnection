@@ -8,6 +8,10 @@ import com.example.terraconnection.data.ScheduleResponse
 import com.example.terraconnection.data.User
 import com.example.terraconnection.data.AttendanceResponse
 import com.example.terraconnection.data.ClassEnrollmentResponse
+import com.example.terraconnection.data.NotificationRequest
+import com.example.terraconnection.data.NotificationResponse
+import com.example.terraconnection.data.FcmTokenRequest
+import com.example.terraconnection.data.MessageResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -40,4 +44,16 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Query("classId") classId: String
     ): Response<ClassEnrollmentResponse>
+
+    @POST("api/professor/notification")
+    suspend fun sendNotification(
+        @Header("Authorization") token: String,
+        @Body notification: NotificationRequest
+    ): Response<NotificationResponse>
+
+    @POST("api/user/fcm-token")
+    suspend fun updateFcmToken(
+        @Header("Authorization") token: String,
+        @Body request: FcmTokenRequest
+    ): Response<Unit>
 }
