@@ -12,6 +12,7 @@ import com.example.terraconnection.data.NotificationRequest
 import com.example.terraconnection.data.NotificationResponse
 import com.example.terraconnection.data.FcmTokenRequest
 import com.example.terraconnection.data.MessageResponse
+import com.example.terraconnection.data.NotificationsResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -56,4 +57,7 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: FcmTokenRequest
     ): Response<Unit>
+
+    @GET("api/student/notifications")
+    suspend fun getNotifications(@Header("Authorization") token: String): Response<NotificationsResponse>
 }

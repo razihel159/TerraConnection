@@ -65,7 +65,13 @@ data class Student(
 ) : Parcelable
 
 data class Notification(
-    val message: String
+    val id: Int,
+    val title: String,
+    val message: String,
+    val class_name: String,
+    val class_code: String,
+    val sender_name: String,
+    val created_at: String
 )
 
 data class NotificationRequest(
@@ -76,6 +82,10 @@ data class NotificationRequest(
 
 data class NotificationResponse(
     val message: String
+)
+
+data class NotificationsResponse(
+    val notifications: List<Notification>
 )
 
 data class AttendanceResponse(

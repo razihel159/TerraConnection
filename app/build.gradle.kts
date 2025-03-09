@@ -64,6 +64,7 @@ dependencies {
 
     // ✅ Google Maps services
     implementation(libs.play.services.maps)
+    implementation(libs.androidx.swiperefreshlayout)
 
     // ✅ Testing dependencies
     testImplementation(libs.junit)
