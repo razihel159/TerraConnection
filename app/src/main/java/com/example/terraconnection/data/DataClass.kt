@@ -121,7 +121,7 @@ data class EnrolledStudent(
 )
 
 data class FcmTokenRequest(
-    val fcm_token: String
+    val fcmToken: String
 )
 
 data class MessageResponse(

@@ -18,8 +18,14 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Observer
 import com.example.terraconnection.SessionManager
+import com.example.terraconnection.api.RetrofitClient
+import com.example.terraconnection.data.FcmTokenRequest
 import com.example.terraconnection.databinding.ActivityLoginPageBinding
 import kotlin.random.Random
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class LoginPageActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginPageBinding
@@ -83,6 +89,8 @@ class LoginPageActivity : AppCompatActivity() {
                 val token = response.token
                 if (!token.isNullOrEmpty()) {
                     SessionManager.saveToken(this, token)
+                    // Refresh FCM token after successful login
+                    refreshFCMToken(token)
                 }
 
                 Toast.makeText(this, "Login Successful!", Toast.LENGTH_LONG).show()
@@ -136,5 +144,43 @@ class LoginPageActivity : AppCompatActivity() {
                 dialog.dismiss()
             }
             .show()
+    }
+
+    private fun refreshFCMToken(authToken: String) {
+        FirebaseMessaging.getInstance().token
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val fcmToken = task.result
+                    Log.d("Firebase", "FCM Token on login: $fcmToken")
+                    sendTokenToServer(fcmToken, authToken)
+                } else {
+                    Log.e("Firebase", "Failed to get FCM token on login", task.exception)
+                }
+            }
+    }
+
+    private fun sendTokenToServer(fcmToken: String, authToken: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                Log.d("Firebase", "Sending FCM token to server after login...")
+                Log.d("Firebase", "Auth token being used: ${authToken.take(20)}...")
+                Log.d("Firebase", "FCM token being sent: ${fcmToken.take(20)}...")
+                
+                val response = RetrofitClient.apiService.updateFcmToken(
+                    "Bearer $authToken",
+                    FcmTokenRequest(fcmToken)
+                )
+
+                if (response.isSuccessful) {
+                    Log.d("Firebase", "Successfully updated FCM token on server after login")
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("Firebase", "Failed to update token after login: ${response.code()} - ${response.message()}")
+                    Log.e("Firebase", "Error body: $errorBody")
+                }
+            } catch (e: Exception) {
+                Log.e("Firebase", "Error updating token after login: ${e.message}", e)
+            }
+        }
     }
 }
