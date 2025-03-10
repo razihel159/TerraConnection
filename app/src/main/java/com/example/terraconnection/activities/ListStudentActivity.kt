@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -39,6 +40,7 @@ class ListStudentActivity : AppCompatActivity() {
 
         // Initialize RecyclerView
         setupRecyclerView()
+        setupNotificationButton()
 
         // Get class details from intent
         val classId = intent.getIntExtra("class_id", -1)
@@ -52,11 +54,6 @@ class ListStudentActivity : AppCompatActivity() {
         binding.className.text = "$className ($classCode)"
         binding.roomText.text = "Room: $room"
         binding.timeText.text = "Time: $time"
-
-        // Setup notification button
-        binding.notifyAllButton.setOnClickListener {
-            sendNotificationToClass(className, room)
-        }
 
         if (classId == -1) {
             Toast.makeText(this, "Invalid class ID", Toast.LENGTH_SHORT).show()
@@ -189,7 +186,23 @@ class ListStudentActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupNotificationButton() {
+        binding.notifyAllButton.setOnClickListener {
+            val className = intent.getStringExtra("class_name") ?: ""
+            val room = intent.getStringExtra("room") ?: ""
+            sendNotificationToClass(className, room)
+        }
+    }
+
+    private fun updateNotificationButtonState(enabled: Boolean) {
+        binding.notifyAllButton.apply {
+            isEnabled = enabled
+            alpha = if (enabled) 1.0f else 0.5f
+        }
+    }
+
     private fun sendNotificationToClass(className: String, room: String) {
+        updateNotificationButtonState(false)
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val token = SessionManager.getToken(this@ListStudentActivity)?.let { "Bearer $it" }
@@ -210,22 +223,63 @@ class ListStudentActivity : AppCompatActivity() {
                             "Notification sent to all students",
                             Toast.LENGTH_SHORT
                         ).show()
+                        // Start cooldown timer
+                        startCooldownTimer(300) // 5 minutes default
                     } else {
-                        Toast.makeText(
-                            this@ListStudentActivity,
-                            "Failed to send notification",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        // Check if it's a cooldown error
+                        if (response.code() == 429) {
+                            val errorBody = response.errorBody()?.string()
+                            if (errorBody?.contains("remainingSeconds") == true) {
+                                val remainingSeconds = errorBody.substringAfter("remainingSeconds\":").substringBefore("}")
+                                    .trim().toIntOrNull() ?: 300
+                                startCooldownTimer(remainingSeconds)
+                                val minutes = remainingSeconds / 60
+                                val seconds = remainingSeconds % 60
+                                Toast.makeText(
+                                    this@ListStudentActivity,
+                                    "Please wait $minutes minutes and $seconds seconds before sending another notification",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else {
+                                updateNotificationButtonState(true)
+                                Toast.makeText(
+                                    this@ListStudentActivity,
+                                    "Please wait before sending another notification",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            updateNotificationButtonState(true)
+                            Toast.makeText(
+                                this@ListStudentActivity,
+                                "Failed to send notification",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 }
             } catch (e: Exception) {
                 Log.e("ListStudentActivity", "Error sending notification: ${e.message}")
                 withContext(Dispatchers.Main) {
+                    updateNotificationButtonState(true)
                     Toast.makeText(
                         this@ListStudentActivity,
                         "Error sending notification: ${e.message}",
                         Toast.LENGTH_SHORT
                     ).show()
+                }
+            }
+        }
+    }
+
+    private fun startCooldownTimer(seconds: Int) {
+        CoroutineScope(Dispatchers.Main).launch {
+            var remainingSeconds = seconds
+            while (remainingSeconds > 0) {
+                delay(1000)
+                remainingSeconds--
+                if (remainingSeconds == 0) {
+                    updateNotificationButtonState(true)
                 }
             }
         }
