@@ -26,6 +26,9 @@ interface ApiService {
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
     @GET("api/auth/me")
+    suspend fun getMe(@Header("Authorization") token: String): Response<User>
+
+    @GET("api/auth/me")
     suspend fun getUsers(@Header("Authorization") token: String): Response<User>
 
     @GET("api/student/schedule")

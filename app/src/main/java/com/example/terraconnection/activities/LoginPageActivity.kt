@@ -46,9 +46,34 @@ class LoginPageActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         installSplashScreen()
+        super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Check for existing token and auto-login if present
+        val existingToken = SessionManager.getToken(this)
+        if (!existingToken.isNullOrEmpty()) {
+            // Verify token validity by making an API call
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response = RetrofitClient.apiService.getMe("Bearer $existingToken")
+                    if (response.isSuccessful) {
+                        // Token is valid, proceed to home screen
+                        val intent = Intent(this@LoginPageActivity, HomePanelActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+                        return@launch
+                    } else {
+                        // Token is invalid, clear it
+                        SessionManager.clearSession(this@LoginPageActivity)
+                    }
+                } catch (e: Exception) {
+                    // Error occurred, clear token
+                    SessionManager.clearSession(this@LoginPageActivity)
+                }
+            }
+        }
 
         binding = ActivityLoginPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
