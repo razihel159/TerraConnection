@@ -11,8 +11,14 @@ import com.example.terraconnection.data.Notification
 import java.text.SimpleDateFormat
 import java.util.*
 
-class NotificationAdapter(private val notifications: List<Notification>) :
-    RecyclerView.Adapter<NotificationAdapter.NotificationViewHolder>() {
+class NotificationAdapter(
+    private var notifications: List<Notification>,
+    private val listener: NotificationListener
+) : RecyclerView.Adapter<NotificationAdapter.NotificationViewHolder>() {
+
+    interface NotificationListener {
+        fun onNotificationClicked(notification: Notification)
+    }
 
     class NotificationViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val titleText: TextView = itemView.findViewById(R.id.titleText)
@@ -20,6 +26,7 @@ class NotificationAdapter(private val notifications: List<Notification>) :
         val classText: TextView = itemView.findViewById(R.id.classText)
         val senderText: TextView = itemView.findViewById(R.id.senderText)
         val timeText: TextView = itemView.findViewById(R.id.timeText)
+        val unreadIndicator: View = itemView.findViewById(R.id.unreadIndicator)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotificationViewHolder {
@@ -35,21 +42,33 @@ class NotificationAdapter(private val notifications: List<Notification>) :
         holder.messageText.text = notification.message
         holder.classText.text = "${notification.class_code} - ${notification.class_name}"
         holder.senderText.text = "From: ${notification.sender_name}"
-
-        // Format the time as relative time span
+        
+        // Format relative time
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
         dateFormat.timeZone = TimeZone.getTimeZone("UTC")
         val date = dateFormat.parse(notification.created_at)
-        val now = System.currentTimeMillis()
-        
         date?.let {
-            holder.timeText.text = DateUtils.getRelativeTimeSpanString(
-                it.time,
-                now,
-                DateUtils.MINUTE_IN_MILLIS
+            val now = System.currentTimeMillis()
+            val relativeTime = DateUtils.getRelativeTimeSpanString(
+                it.time, now, DateUtils.MINUTE_IN_MILLIS,
+                DateUtils.FORMAT_ABBREV_RELATIVE
             )
+            holder.timeText.text = relativeTime
+        }
+
+        // Set unread indicator visibility
+        holder.unreadIndicator.visibility = if (notification.is_read) View.GONE else View.VISIBLE
+
+        // Set click listener
+        holder.itemView.setOnClickListener {
+            listener.onNotificationClicked(notification)
         }
     }
 
-    override fun getItemCount(): Int = notifications.size
+    override fun getItemCount() = notifications.size
+
+    fun updateNotifications(newNotifications: List<Notification>) {
+        notifications = newNotifications
+        notifyDataSetChanged()
+    }
 }

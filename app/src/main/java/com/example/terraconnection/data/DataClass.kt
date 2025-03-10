@@ -71,7 +71,8 @@ data class Notification(
     val class_name: String,
     val class_code: String,
     val sender_name: String,
-    val created_at: String
+    val created_at: String,
+    var is_read: Boolean = false
 )
 
 data class NotificationRequest(

@@ -19,6 +19,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
+import retrofit2.http.Path
 
 interface ApiService {
     @POST("api/auth/login")
@@ -60,4 +61,10 @@ interface ApiService {
 
     @GET("api/student/notifications")
     suspend fun getNotifications(@Header("Authorization") token: String): Response<NotificationsResponse>
+
+    @POST("api/student/notifications/{id}/read")
+    suspend fun markNotificationAsRead(
+        @Header("Authorization") token: String,
+        @Path("id") notificationId: Int
+    ): Response<MessageResponse>
 }
