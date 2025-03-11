@@ -23,6 +23,7 @@ import android.util.Log
 import com.example.terraconnection.activities.AttendanceLogs
 import com.example.terraconnection.activities.ListStudentActivity
 import com.example.terraconnection.activities.NotificationActivity
+import java.util.*
 
 class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClickListener {
 
@@ -119,25 +120,43 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
             }
 
             if (scheduleResponse.isSuccessful) {
-                val scheduleList: List<Schedule> = scheduleResponse.body()?.schedule ?: emptyList()
-                Log.d("Schedule", "Received schedules: $scheduleList")
-                if (scheduleList.isNotEmpty()) {
-                    val firstSchedule = scheduleList[0]
-                    Log.d("Schedule", """
-                        First schedule details:
-                        Class Code: ${firstSchedule.classCode}
-                        Class Name: ${firstSchedule.className}
-                        Room: ${firstSchedule.room}
-                        Time: ${firstSchedule.startTime} - ${firstSchedule.endTime}
-                    """.trimIndent())
+                val allSchedules: List<Schedule> = scheduleResponse.body()?.schedule ?: emptyList()
+                
+                // Filter schedules for today
+                val calendar = Calendar.getInstance()
+                val dayOfWeek = when (calendar.get(Calendar.DAY_OF_WEEK)) {
+                    Calendar.MONDAY -> "Mon"
+                    Calendar.TUESDAY -> "Tue"
+                    Calendar.WEDNESDAY -> "Wed"
+                    Calendar.THURSDAY -> "Thu"
+                    Calendar.FRIDAY -> "Fri"
+                    Calendar.SATURDAY -> "Sat"
+                    Calendar.SUNDAY -> "Sun"
+                    else -> ""
                 }
-                val adapter = ScheduleAdapter(scheduleList.toMutableList(), this)
-                binding.subjectCard.layoutManager = LinearLayoutManager(
-                    requireContext(),
-                    LinearLayoutManager.HORIZONTAL,
-                    false
-                )
-                binding.subjectCard.adapter = adapter
+                
+                val todaySchedules = allSchedules.filter { schedule ->
+                    schedule.schedule?.split(",")?.map { it.trim() }?.contains(dayOfWeek) == true
+                }
+                
+                Log.d("Schedule", "Today's schedules: $todaySchedules")
+                
+                if (todaySchedules.isNotEmpty()) {
+                    val adapter = ScheduleAdapter(todaySchedules.toMutableList(), this)
+                    binding.subjectCard.layoutManager = LinearLayoutManager(
+                        requireContext(),
+                        LinearLayoutManager.HORIZONTAL,
+                        false
+                    )
+                    binding.subjectCard.adapter = adapter
+                } else {
+                    // Show a message when there are no classes today
+                    Toast.makeText(
+                        requireContext(),
+                        "No classes scheduled for today",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             } else {
                 Toast.makeText(
                     requireContext(),
@@ -158,11 +177,11 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
 
     override fun onScheduleClick(schedule: Schedule) {
         val intent = Intent(requireContext(), ListStudentActivity::class.java)
-        intent.putExtra("class_id", schedule.id)
-        intent.putExtra("class_code", schedule.classCode)
-        intent.putExtra("class_name", schedule.className)
+        intent.putExtra("classId", schedule.id.toString())
+        intent.putExtra("classCode", schedule.class_code)
+        intent.putExtra("className", schedule.class_name)
         intent.putExtra("room", schedule.room)
-        intent.putExtra("time", "${schedule.startTime} - ${schedule.endTime}")
+        intent.putExtra("time", "${schedule.start_time} - ${schedule.end_time}")
         startActivity(intent)
     }
 

@@ -71,19 +71,29 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
                     return@launch
                 }
 
-                // Fetch professor schedule
+                // Only fetch professor schedule
                 val profResponse = RetrofitClient.apiService.getProfessorSchedule("Bearer $token")
-                val studentResponse = RetrofitClient.apiService.getStudentSchedule("Bearer $token")
 
                 withContext(Dispatchers.Main) {
-                    if (profResponse.isSuccessful && studentResponse.isSuccessful) {
+                    if (profResponse.isSuccessful) {
                         val profSchedule = profResponse.body()?.schedule ?: emptyList()
-                        val studentSchedule = studentResponse.body()?.schedule ?: emptyList()
+                        scheduleList = profSchedule
 
-                        scheduleList = profSchedule + studentSchedule
-
-                        // ✅ Log schedule list to check if it's empty
+                        // Log schedule list to check if it's empty
+                        Log.d("CalendarProfFragment", "Raw API Response: ${profResponse.body()}")
                         Log.d("CalendarProfFragment", "Fetched schedules: $scheduleList")
+                        
+                        // Log each schedule's details
+                        scheduleList.forEach { schedule ->
+                            Log.d("CalendarProfFragment", """
+                                Schedule Details:
+                                Class Code: ${schedule.class_code}
+                                Class Name: ${schedule.class_name}
+                                Schedule Days: ${schedule.schedule}
+                                Room: ${schedule.room}
+                                Time: ${schedule.start_time} - ${schedule.end_time}
+                            """.trimIndent())
+                        }
 
                         if (scheduleList.isNotEmpty()) {
                             scheduleAdapter.updateList(scheduleList.toMutableList())
@@ -94,13 +104,15 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
                             Toast.makeText(requireContext(), "No schedule available", Toast.LENGTH_SHORT).show()
                         }
                     } else {
-                        Log.d("CalendarProfFragment", "API call failed: ${profResponse.message()} / ${studentResponse.message()}")
+                        Log.d("CalendarProfFragment", "API call failed: ${profResponse.message()}")
+                        Log.d("CalendarProfFragment", "Error body: ${profResponse.errorBody()?.string()}")
                         Toast.makeText(requireContext(), "Failed to fetch schedules", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e("CalendarProfFragment", "Error fetching schedules: ${e.message}")
+                    Log.e("CalendarProfFragment", "Stack trace: ${e.stackTraceToString()}")
                     Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -109,28 +121,36 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
 
     private fun filterSchedules(selectedDate: String) {
         Log.d("CalendarProfFragment", "Filtering for date: $selectedDate")
+        Log.d("CalendarProfFragment", "Total schedules before filtering: ${scheduleList.size}")
+
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = dateFormat.parse(selectedDate)
+        calendar.time = date
+        val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+        val selectedDay = when (dayOfWeek) {
+            Calendar.MONDAY -> "Mon"
+            Calendar.TUESDAY -> "Tue"
+            Calendar.WEDNESDAY -> "Wed"
+            Calendar.THURSDAY -> "Thu"
+            Calendar.FRIDAY -> "Fri"
+            Calendar.SATURDAY -> "Sat"
+            Calendar.SUNDAY -> "Sun"
+            else -> ""
+        }
+        Log.d("CalendarProfFragment", "Selected day abbreviation: $selectedDay")
 
         val filteredSchedules = scheduleList.filter { schedule ->
-            val matches = schedule.schedule.split(",").any { day ->
-                val calendar = Calendar.getInstance()
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val date = dateFormat.parse(selectedDate)
-                calendar.time = date
-                val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
-                val selectedDay = when (dayOfWeek) {
-                    Calendar.MONDAY -> "Mon"
-                    Calendar.TUESDAY -> "Tue"
-                    Calendar.WEDNESDAY -> "Wed"
-                    Calendar.THURSDAY -> "Thu"
-                    Calendar.FRIDAY -> "Fri"
-                    Calendar.SATURDAY -> "Sat"
-                    Calendar.SUNDAY -> "Sun"
-                    else -> ""
-                }
-                Log.d("CalendarProfFragment", "Checking schedule: ${schedule.schedule}")
-                day.trim() == selectedDay
-            }
-            matches
+            val scheduleDays = schedule.schedule.split(",").map { it.trim() }
+            Log.d("CalendarProfFragment", """
+                Checking schedule:
+                Class: ${schedule.class_code}
+                Raw schedule string: ${schedule.schedule}
+                Parsed days: $scheduleDays
+                Looking for day: $selectedDay
+                Contains day: ${scheduleDays.contains(selectedDay)}
+            """.trimIndent())
+            scheduleDays.contains(selectedDay)
         }
 
         Log.d("CalendarProfFragment", "Filtered schedules: $filteredSchedules")
@@ -138,19 +158,20 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
         if (filteredSchedules.isNotEmpty()) {
             scheduleAdapter.updateList(filteredSchedules.toMutableList())
             binding.profSched.visibility = View.VISIBLE
-            Toast.makeText(requireContext(), "Schedule loaded for $selectedDate", Toast.LENGTH_SHORT).show() // ✅ Schedule loaded toast
         } else {
             scheduleAdapter.updateList(mutableListOf())
             binding.profSched.visibility = View.GONE
-            Toast.makeText(requireContext(), "No schedule available for $selectedDate", Toast.LENGTH_SHORT).show() // ✅ No schedule toast
             Log.d("CalendarProfFragment", "No matching schedules for selected date: $selectedDate")
         }
     }
 
     private fun navigateToListStudentActivity(schedule: Schedule) {
         val intent = Intent(requireContext(), ListStudentActivity::class.java).apply {
+            putExtra("class_id", schedule.id)
             putExtra("classCode", schedule.class_code)
             putExtra("className", schedule.class_name)
+            putExtra("room", schedule.room)
+            putExtra("time", "${schedule.start_time} - ${schedule.end_time}")
         }
         startActivity(intent)
     }

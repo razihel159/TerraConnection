@@ -43,19 +43,20 @@ class ListStudentActivity : AppCompatActivity() {
         setupNotificationButton()
 
         // Get class details from intent
-        val classId = intent.getIntExtra("class_id", -1)
-        currentClassId = classId.toString()
-        val classCode = intent.getStringExtra("class_code") ?: ""
-        val className = intent.getStringExtra("class_name") ?: ""
+        val classId = intent.getStringExtra("classId") ?: ""
+        val classCode = intent.getStringExtra("classCode") ?: ""
+        val className = intent.getStringExtra("className") ?: ""
         val room = intent.getStringExtra("room") ?: ""
         val time = intent.getStringExtra("time") ?: ""
+
+        currentClassId = classId // Use classId instead of classCode
 
         // Update class info in UI
         binding.className.text = "$className ($classCode)"
         binding.roomText.text = "Room: $room"
         binding.timeText.text = "Time: $time"
 
-        if (classId == -1) {
+        if (classId.isEmpty()) {
             Toast.makeText(this, "Invalid class ID", Toast.LENGTH_SHORT).show()
             finish()
             return
@@ -66,7 +67,7 @@ class ListStudentActivity : AppCompatActivity() {
         val today = dateFormat.format(Date())
 
         // Fetch attendance data
-        fetchAttendanceData(classId.toString(), today)
+        fetchAttendanceData(classId, today)
     }
 
     private fun setupRecyclerView() {
@@ -188,9 +189,10 @@ class ListStudentActivity : AppCompatActivity() {
 
     private fun setupNotificationButton() {
         binding.notifyAllButton.setOnClickListener {
-            val className = intent.getStringExtra("class_name") ?: ""
+            val className = intent.getStringExtra("className") ?: ""
             val room = intent.getStringExtra("room") ?: ""
-            sendNotificationToClass(className, room)
+            val classId = intent.getStringExtra("classId") ?: ""
+            sendNotificationToClass(className, room, classId)
         }
     }
 
@@ -201,7 +203,7 @@ class ListStudentActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendNotificationToClass(className: String, room: String) {
+    private fun sendNotificationToClass(className: String, room: String, classId: String) {
         updateNotificationButtonState(false)
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -209,7 +211,7 @@ class ListStudentActivity : AppCompatActivity() {
                     ?: throw Exception("No authentication token found")
 
                 val notificationRequest = NotificationRequest(
-                    classId = currentClassId,
+                    classId = classId,
                     title = "Class Reminder",
                     message = "Please proceed to $className class in Room $room"
                 )
