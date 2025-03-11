@@ -48,8 +48,9 @@ class ListStudentActivity : AppCompatActivity() {
         val className = intent.getStringExtra("className") ?: ""
         val room = intent.getStringExtra("room") ?: ""
         val time = intent.getStringExtra("time") ?: ""
+        val fromCalendar = intent.getBooleanExtra("fromCalendar", false)
 
-        currentClassId = classId // Use classId instead of classCode
+        currentClassId = classId
 
         // Update class info in UI
         binding.className.text = "$className ($classCode)"
@@ -62,12 +63,26 @@ class ListStudentActivity : AppCompatActivity() {
             return
         }
 
-        // Get today's date in YYYY-MM-DD format
+        // Get date - either selected date from calendar or today's date
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val today = dateFormat.format(Date())
+        val date = if (fromCalendar) {
+            intent.getStringExtra("selectedDate") ?: dateFormat.format(Date())
+        } else {
+            dateFormat.format(Date())
+        }
+
+        // Show selected date if coming from calendar
+        if (fromCalendar) {
+            val displayFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+            val displayDate = displayFormat.format(dateFormat.parse(date)!!)
+            binding.dateText.text = displayDate
+            binding.dateText.visibility = View.VISIBLE
+        } else {
+            binding.dateText.visibility = View.GONE
+        }
 
         // Fetch attendance data
-        fetchAttendanceData(classId, today)
+        fetchAttendanceData(classId, date)
     }
 
     private fun setupRecyclerView() {
@@ -106,25 +121,16 @@ class ListStudentActivity : AppCompatActivity() {
 
                                         withContext(Dispatchers.Main) {
                                             studentList = attendanceData.attendance.map { studentAttendance ->
-                                                // Check if student has any logs for today
+                                                // Check if student has any logs for the specific date
                                                 val hasLogs = studentAttendance.logs.isNotEmpty()
-                                                // If they have logs, check their last scan type
-                                                val isOnCampus = if (hasLogs) {
-                                                    // Get the most recent log
-                                                    val lastLog = studentAttendance.logs.maxByOrNull { it.timestamp }
-                                                    // If the last scan was "entry", they're on campus
-                                                    lastLog?.type == "entry"
-                                                } else {
-                                                    false
-                                                }
                                                 val studentName = studentMap[studentAttendance.studentId] ?: "Unknown Student"
                                                 
                                                 Student(
                                                     id = studentAttendance.studentId,
                                                     name = studentName,
-                                                    onCampus = isOnCampus,
+                                                    onCampus = hasLogs, // For calendar view, we just need to know if they had any logs that day
                                                     role = "student",
-                                                    statusIndicator = if (isOnCampus) R.drawable.ic_present else R.drawable.ic_absent,
+                                                    statusIndicator = if (hasLogs) R.drawable.ic_present else R.drawable.ic_absent,
                                                     notifyIcon = R.drawable.ic_notify
                                                 )
                                             }

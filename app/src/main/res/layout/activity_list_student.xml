@@ -49,6 +49,19 @@
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="Computer Forensics - ITE 384" />
 
+            <TextView
+                android:id="@+id/dateText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textSize="16sp"
+                android:textColor="@color/gray"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/className"
+                tools:text="September 15, 2024"
+                tools:visibility="visible" />
+
             <ImageButton
                 android:id="@+id/notifyAllButton"
                 android:layout_width="48dp"

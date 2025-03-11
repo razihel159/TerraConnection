@@ -29,6 +29,7 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
     private val binding get() = _binding!!
     private lateinit var scheduleAdapter: ScheduleAdapter
     private var scheduleList: List<Schedule> = emptyList()
+    private var selectedDate: String = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) // Today's date by default
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -45,7 +46,7 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
         binding.profSched.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         scheduleAdapter = ScheduleAdapter(mutableListOf(), object : OnScheduleClickListener {
             override fun onScheduleClick(schedule: Schedule) {
-                navigateToListStudentActivity(schedule)
+                navigateToListStudentActivity(schedule, selectedDate)
             }
         })
         binding.profSched.adapter = scheduleAdapter
@@ -55,7 +56,7 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
 
         // ✅ Calendar date change listener
         binding.schedViewCal.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            val selectedDate = "%04d-%02d-%02d".format(year, month + 1, dayOfMonth)
+            selectedDate = "%04d-%02d-%02d".format(year, month + 1, dayOfMonth)
             filterSchedules(selectedDate)
         }
     }
@@ -165,13 +166,15 @@ class CalendarProfFragment : Fragment(R.layout.fragment_calendar_prof) {
         }
     }
 
-    private fun navigateToListStudentActivity(schedule: Schedule) {
+    private fun navigateToListStudentActivity(schedule: Schedule, selectedDate: String) {
         val intent = Intent(requireContext(), ListStudentActivity::class.java).apply {
-            putExtra("class_id", schedule.id)
+            putExtra("classId", schedule.id.toString())
             putExtra("classCode", schedule.class_code)
             putExtra("className", schedule.class_name)
             putExtra("room", schedule.room)
             putExtra("time", "${schedule.start_time} - ${schedule.end_time}")
+            putExtra("selectedDate", selectedDate)
+            putExtra("fromCalendar", true)
         }
         startActivity(intent)
     }
