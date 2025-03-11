@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragments.CalendarStudFragment">
+
+    <!-- Content Container (Calendar and related views) -->
+    <RelativeLayout
+        android:id="@+id/contentContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@color/violet">
+
+        <TextView
+            android:id="@+id/selectDateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select a date to view attendance logs"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentTop="true"
+            android:background="@color/white"/>
+
+        <CalendarView
+            android:id="@+id/studViewCal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/selectDateText"
+            android:layout_marginTop="16dp"
+            android:background="@color/white"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/attendanceLogs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/studViewCal"
+            android:layout_marginTop="16dp"
+            android:background="@color/white"/>
+
+        <TextView
+            android:id="@+id/noLogsText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/studViewCal"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="32dp"
+            android:text="No attendance logs for this date"
+            android:textSize="16sp"
+            android:visibility="gone"
+            android:background="@color/white"/>
+
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout> 

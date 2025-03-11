@@ -5,7 +5,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.terraconnection.fragments.MapsFragment
 import com.example.terraconnection.R
 import com.example.terraconnection.ThemeManager
+import com.example.terraconnection.SessionManager
 import com.example.terraconnection.fragments.CalendarProfFragment
+import com.example.terraconnection.fragments.CalendarStudFragment
 import com.example.terraconnection.fragments.HomePanelFragment
 import com.example.terraconnection.fragments.SettingsFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -23,9 +25,12 @@ class HomePanelActivity : AppCompatActivity() {
 
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
 
+        // Get user role
+        val role = SessionManager.getRole(this)
+
         // Initialize fragments
         fragments[R.id.nav_home] = HomePanelFragment()
-        fragments[R.id.nav_calendar] = CalendarProfFragment()
+        fragments[R.id.nav_calendar] = if (role == "professor") CalendarProfFragment() else CalendarStudFragment()
         fragments[R.id.nav_profile] = SettingsFragment()
         fragments[R.id.nav_location] = MapsFragment()
 

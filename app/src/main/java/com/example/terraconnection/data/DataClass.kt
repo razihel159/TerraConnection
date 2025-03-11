@@ -89,7 +89,11 @@ data class NotificationsResponse(
     val notifications: List<Notification>
 )
 
-data class AttendanceResponse(
+data class StudentAttendanceResponse(
+    val attendance: List<AttendanceLog>
+)
+
+data class ProfessorAttendanceResponse(
     val date: String,
     val classId: String,
     val attendance: List<StudentAttendance>

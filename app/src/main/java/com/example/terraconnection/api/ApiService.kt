@@ -6,7 +6,8 @@ import com.example.terraconnection.data.LoginResponse
 import com.example.terraconnection.data.Schedule
 import com.example.terraconnection.data.ScheduleResponse
 import com.example.terraconnection.data.User
-import com.example.terraconnection.data.AttendanceResponse
+import com.example.terraconnection.data.StudentAttendanceResponse
+import com.example.terraconnection.data.ProfessorAttendanceResponse
 import com.example.terraconnection.data.ClassEnrollmentResponse
 import com.example.terraconnection.data.NotificationRequest
 import com.example.terraconnection.data.NotificationResponse
@@ -42,7 +43,13 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Query("date") date: String,
         @Query("classId") classId: String
-    ): Response<AttendanceResponse>
+    ): Response<ProfessorAttendanceResponse>
+
+    @GET("api/student/attendance")
+    suspend fun getStudentAttendance(
+        @Header("Authorization") token: String,
+        @Query("date") date: String
+    ): Response<StudentAttendanceResponse>
 
     @GET("api/professor/class-enrollment")
     suspend fun getClassEnrollment(
