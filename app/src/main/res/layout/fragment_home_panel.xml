@@ -28,13 +28,33 @@
                 android:textColor="@color/black"
                 android:textSize="24sp" />
 
-            <ImageButton
-                android:id="@+id/subjectNotification"
-                android:layout_width="46dp"
-                android:layout_height="46dp"
+            <FrameLayout
+                android:id="@+id/notificationContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:background="@color/white"
-                android:src="@drawable/ic_notification" />
+                android:padding="8dp">
+
+                <ImageButton
+                    android:id="@+id/subjectNotification"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_notification"
+                    app:tint="@color/violet" />
+
+                <TextView
+                    android:id="@+id/notificationBadge"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="top|end"
+                    android:background="@drawable/notification_badge"
+                    android:gravity="center"
+                    android:textColor="@color/white"
+                    android:textSize="10sp"
+                    android:visibility="gone"
+                    android:text="0" />
+            </FrameLayout>
 
         </RelativeLayout>
 

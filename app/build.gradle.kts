@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation("androidx.preference:preference-ktx:1.2.1")
 
     // ✅ Navigation components
     implementation(libs.androidx.navigation.fragment.ktx)
@@ -65,6 +66,7 @@ dependencies {
     // ✅ Google Maps services
     implementation(libs.play.services.maps)
     implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.androidx.core.animation)
 
     // ✅ Testing dependencies
     testImplementation(libs.junit)

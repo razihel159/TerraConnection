@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Observer
 import com.example.terraconnection.SessionManager
+import com.example.terraconnection.ThemeManager
 import com.example.terraconnection.api.RetrofitClient
 import com.example.terraconnection.data.FcmTokenRequest
 import com.example.terraconnection.databinding.ActivityLoginPageBinding
@@ -47,6 +48,7 @@ class LoginPageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
+        ThemeManager.applyTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 

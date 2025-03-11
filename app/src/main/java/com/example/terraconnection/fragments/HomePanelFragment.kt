@@ -20,6 +20,8 @@ import com.example.terraconnection.data.Schedule
 import com.example.terraconnection.databinding.FragmentHomePanelBinding
 import kotlinx.coroutines.launch
 import android.util.Log
+import android.animation.ObjectAnimator
+import android.view.animation.AccelerateDecelerateInterpolator
 import com.example.terraconnection.activities.AttendanceLogs
 import com.example.terraconnection.activities.ListStudentActivity
 import com.example.terraconnection.activities.NotificationActivity
@@ -42,7 +44,6 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -51,16 +52,34 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
 
         val role = SessionManager.getRole(requireContext())
 
-        if (role == "student") {
-            binding.studentStatus.visibility = View.GONE
+        // Pre-set initial visibility to INVISIBLE instead of GONE to maintain layout
+        binding.studentStatus.alpha = 0f
+        binding.attendanceLog.alpha = 0f
+        binding.notifyButton.alpha = 0f
+
+        when (role) {
+            "student" -> {
+                binding.studentStatus.visibility = View.GONE
+            }
+            "guardian" -> {
+                binding.notifyButton.visibility = View.GONE
+            }
+            "professor" -> {
+                binding.attendanceLog.visibility = View.GONE
+                binding.studentStatus.visibility = View.GONE
+                binding.subjectNotification.visibility = View.GONE
+            }
         }
 
-        if (role == "guardian") {
-            binding.notifyButton.visibility = View.GONE
+        // Animate visible elements
+        if (role != "student") {
+            animateViewIn(binding.studentStatus)
         }
-        if (role == "professor") {
-            binding.attendanceLog.visibility = View.GONE
-            binding.studentStatus.visibility = View.GONE
+        if (role != "professor") {
+            animateViewIn(binding.attendanceLog)
+        }
+        if (role != "guardian") {
+            animateViewIn(binding.notifyButton)
         }
 
         if (role == "student" || role == "professor") {
@@ -75,10 +94,24 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
             startActivity(intent)
         }
 
-
         lifecycleScope.launch {
             fetchUserDetails()
             setupRecyclerView()
+            if (role != "professor") {
+                fetchNotifications()
+            }
+        }
+    }
+
+    private fun animateViewIn(view: View) {
+        if (view.visibility != View.GONE) {
+            view.alpha = 0f
+            view.visibility = View.VISIBLE
+            ObjectAnimator.ofFloat(view, "alpha", 0f, 1f).apply {
+                duration = 300
+                interpolator = AccelerateDecelerateInterpolator()
+                start()
+            }
         }
     }
 
@@ -175,6 +208,24 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
         }
     }
 
+    private suspend fun fetchNotifications() {
+        try {
+            val token = SessionManager.getToken(requireContext())?.let { "Bearer $it" }
+                ?: throw Exception("No authentication token found")
+
+            val response = apiService.getNotifications(token)
+            if (response.isSuccessful) {
+                val notifications = response.body()?.notifications ?: emptyList()
+                val unreadCount = notifications.count { !it.is_read }
+                updateNotificationBadge(unreadCount)
+            } else {
+                Log.e("Notifications", "Failed to fetch notifications: ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Log.e("Notifications", "Error fetching notifications: ${e.message}")
+        }
+    }
+
     override fun onScheduleClick(schedule: Schedule) {
         val intent = Intent(requireContext(), ListStudentActivity::class.java)
         intent.putExtra("classId", schedule.id.toString())
@@ -187,10 +238,33 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
 
     override fun onResume() {
         super.onResume()
-        // Retrieve notification from SharedPreferences
-        val sharedPreferences = requireContext().getSharedPreferences("TerraPrefs", Context.MODE_PRIVATE)
-        val notificationMessage = sharedPreferences.getString("notification_message", "No notifications yet.")
-        // Update UI
+        // Fetch notifications on resume to update badge
+        if (SessionManager.getRole(requireContext()) != "professor") {
+            lifecycleScope.launch {
+                fetchNotifications()
+            }
+        }
+    }
+
+    private fun updateNotificationBadge(count: Int) {
+        binding.notificationBadge.apply {
+            text = if (count > 99) "99+" else count.toString()
+            visibility = if (count > 0) View.VISIBLE else View.GONE
+            
+            // Animate badge if it becomes visible
+            if (count > 0 && visibility == View.VISIBLE) {
+                alpha = 0f
+                scaleX = 0f
+                scaleY = 0f
+                animate()
+                    .alpha(1f)
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(300)
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .start()
+            }
+        }
     }
 
     override fun onDestroyView() {
