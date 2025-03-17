@@ -1,20 +1,15 @@
 package com.example.terraconnection.activities
 
 import LoginViewModel
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Observer
 import com.example.terraconnection.SessionManager
@@ -31,20 +26,6 @@ import kotlinx.coroutines.launch
 class LoginPageActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginPageBinding
     private val viewModel: LoginViewModel by viewModels()
-
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            // Permission granted
-            Log.d("Notifications", "Permission granted")
-        } else {
-            // Permission denied
-            Toast.makeText(this, 
-                "Notification permission denied. You won't receive class notifications.", 
-                Toast.LENGTH_LONG).show()
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -79,26 +60,6 @@ class LoginPageActivity : AppCompatActivity() {
 
         binding = ActivityLoginPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // Request notification permission for Android 13+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            when {
-                ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED -> {
-                    // Permission already granted
-                }
-                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
-                    // Show rationale if needed
-                    showNotificationPermissionRationale()
-                }
-                else -> {
-                    // Request permission
-                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-            }
-        }
 
         binding.btnSignIN.setOnClickListener {
             val username = binding.etUsername.text.toString().trim()
@@ -158,19 +119,6 @@ class LoginPageActivity : AppCompatActivity() {
         return (1..6)
             .map { chars[Random.nextInt(chars.length)] }
             .joinToString("")
-    }
-
-    private fun showNotificationPermissionRationale() {
-        AlertDialog.Builder(this)
-            .setTitle("Notification Permission")
-            .setMessage("Notifications are required to receive important class updates and reminders. Please allow notifications to get the best experience.")
-            .setPositiveButton("Grant Permission") { _, _ ->
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-            .setNegativeButton("Not Now") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
     }
 
     private fun refreshFCMToken(authToken: String) {

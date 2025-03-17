@@ -1,37 +1,34 @@
 package com.example.terraconnection.fragments
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.terraconnection.R
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.terraconnection.SessionManager
+import com.example.terraconnection.adapters.ClassListAdapter
+import com.example.terraconnection.api.RetrofitClient
+import com.example.terraconnection.dialogs.LocationSharingDialog
+import com.example.terraconnection.models.ClassItem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+import org.json.JSONObject
 
 class MapsFragment : Fragment() {
-
-    private var googleMap: GoogleMap? = null
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-
-    private val callback = OnMapReadyCallback { map ->
-        googleMap = map
-        enableMyLocation()
-    }
+    private val apiService = RetrofitClient.apiService
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: ClassListAdapter
+    private var webSocket: WebSocket? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,73 +41,99 @@ class MapsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
-        mapFragment?.getMapAsync(callback)
-
-        // Initialize the FusedLocationProviderClient
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-    }
-
-    private fun enableMyLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            googleMap?.isMyLocationEnabled = true
-            getCurrentLocation()
-        } else {
-            requestPermissions(
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE
-            )
+        // Setup RecyclerView
+        recyclerView = view.findViewById(R.id.classRecyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(context)
+        adapter = ClassListAdapter { classItem ->
+            showLocationSharingDialog(classItem)
         }
+        recyclerView.adapter = adapter
+
+        fetchClasses()
+        connectWebSocket()
     }
 
-    private fun getCurrentLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-                location?.let {
-                    val currentLatLng = LatLng(it.latitude, it.longitude)
-                    googleMap?.apply {
-                        // Use a more descriptive marker title
-                        addMarker(MarkerOptions().position(currentLatLng).title("Exact Location Today"))
-                        moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
+    private fun connectWebSocket() {
+        val token = SessionManager.getToken(requireContext()) ?: return
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("wss://terraconnection.online/ws")
+            .addHeader("Authorization", "Bearer $token")
+            .build()
+
+        webSocket = client.newWebSocket(request, object : WebSocketListener() {
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                try {
+                    val json = JSONObject(text)
+                    when (json.getString("type")) {
+                        "activeUsers" -> {
+                            val classId = json.getString("classId")
+                            val count = json.getInt("count")
+                            activity?.runOnUiThread {
+                                adapter.updateActiveUsers(classId, count)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        })
+    }
+
+    private fun fetchClasses() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val token = SessionManager.getToken(requireContext())?.let { "Bearer $it" }
+                    ?: throw Exception("No authentication token found")
+
+                val role = SessionManager.getRole(requireContext())
+                val response = if (role == "professor") {
+                    apiService.getProfessorSchedule(token)
+                } else {
+                    apiService.getStudentSchedule(token)
+                }
+
+                if (response.isSuccessful) {
+                    val schedules = response.body()?.schedule ?: emptyList()
+                    val classes = schedules.map { schedule ->
+                        ClassItem(
+                            id = schedule.id.toString(),
+                            name = "${schedule.className} (${schedule.classCode})"
+                        )
                     }
 
-                    // Format the current date and time
-                    val currentDateTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                        .format(Date())
-
-                    // Show a Toast message with the formatted date/time and the latitude/longitude
+                    withContext(Dispatchers.Main) {
+                        adapter.submitList(classes)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            "Failed to load classes: ${response.message()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
                     Toast.makeText(
-                        requireContext(),
-                        "Exact Location as of $currentDateTime:\nLat: ${it.latitude}, Lng: ${it.longitude}",
-                        Toast.LENGTH_LONG
+                        context,
+                        "Error: ${e.message}",
+                        Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                enableMyLocation()
-            }
-        }
+    private fun showLocationSharingDialog(classItem: ClassItem) {
+        LocationSharingDialog.newInstance(classItem.id, classItem.name)
+            .show(childFragmentManager, "location_sharing")
     }
 
-    companion object {
-        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+    override fun onDestroyView() {
+        super.onDestroyView()
+        webSocket?.close(1000, null)
     }
 }
