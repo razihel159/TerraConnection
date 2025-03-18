@@ -131,32 +131,22 @@
                         android:textStyle="bold"
                         android:textColor="@color/white"/>
 
-                    <androidx.cardview.widget.CardView
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvAttendanceLogs"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        app:cardElevation="4dp"
-                        app:cardCornerRadius="8dp">
+                        android:clipToPadding="false"
+                        android:background="@android:color/transparent"/>
 
-                        <LinearLayout
-                            android:id="@+id/attendanceHistory"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:orientation="vertical"
-                            android:padding="16dp">
-
-                            <TextView
-                                android:id="@+id/tvAttendanceLog"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="16dp"
-                                android:text="Waiting for student arrival..."
-                                android:textSize="18sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </androidx.cardview.widget.CardView>
+                    <TextView
+                        android:id="@+id/tvNoLogs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="No recent attendance logs"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:visibility="gone"/>
                 </LinearLayout>
 
                 <!-- Student Status Section -->

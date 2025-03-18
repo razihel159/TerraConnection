@@ -15,6 +15,7 @@ import com.example.terraconnection.R
 import com.example.terraconnection.SessionManager
 import com.example.terraconnection.adapters.ScheduleAdapter
 import com.example.terraconnection.adapters.OnScheduleClickListener
+import com.example.terraconnection.adapters.AttendanceLogAdapter
 import com.example.terraconnection.api.RetrofitClient
 import com.example.terraconnection.data.Schedule
 import com.example.terraconnection.databinding.FragmentHomePanelBinding
@@ -26,17 +27,21 @@ import com.example.terraconnection.activities.AttendanceLogs
 import com.example.terraconnection.activities.ListStudentActivity
 import com.example.terraconnection.activities.NotificationActivity
 import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
 
 class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClickListener {
 
     private var _binding: FragmentHomePanelBinding? = null
     private val binding get() = _binding!!
     private val apiService = RetrofitClient.apiService
+    private lateinit var attendanceAdapter: AttendanceLogAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentHomePanelBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -82,21 +87,19 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
             animateViewIn(binding.notifyButton)
         }
 
-        if (role == "student" || role == "professor") {
-            binding.attendanceHistory.setOnClickListener {
-                val intent = Intent(requireContext(), AttendanceLogs::class.java)
-                startActivity(intent)
-            }
-        }
-
         binding.subjectNotification.setOnClickListener {
             val intent = Intent(requireContext(), NotificationActivity::class.java)
             startActivity(intent)
         }
 
+        setupRecyclerViews()
+        lifecycleScope.launch {
+            setupRecyclerView()
+        }
+        fetchRecentAttendanceLogs()
+
         lifecycleScope.launch {
             fetchUserDetails()
-            setupRecyclerView()
             if (role != "professor") {
                 fetchNotifications()
             }
@@ -111,6 +114,61 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                 duration = 300
                 interpolator = AccelerateDecelerateInterpolator()
                 start()
+            }
+        }
+    }
+
+    private fun setupRecyclerViews() {
+        // Setup schedule RecyclerView
+        binding.subjectCard.layoutManager = LinearLayoutManager(
+            requireContext(),
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+
+        // Setup attendance logs RecyclerView
+        binding.rvAttendanceLogs.layoutManager = LinearLayoutManager(requireContext())
+        attendanceAdapter = AttendanceLogAdapter()
+        binding.rvAttendanceLogs.adapter = attendanceAdapter
+    }
+
+    private fun fetchRecentAttendanceLogs() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val token = SessionManager.getToken(requireContext())
+                if (token == null) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "No token found, please log in again", Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
+
+                val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                val response = RetrofitClient.apiService.getStudentAttendance("Bearer $token", today)
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val logs = response.body()?.attendance ?: emptyList()
+                        Log.d("HomePanelFragment", "Fetched attendance logs: $logs")
+                        
+                        if (logs.isNotEmpty()) {
+                            attendanceAdapter.updateLogs(logs)
+                            binding.rvAttendanceLogs.visibility = View.VISIBLE
+                            binding.tvNoLogs.visibility = View.GONE
+                        } else {
+                            binding.rvAttendanceLogs.visibility = View.GONE
+                            binding.tvNoLogs.visibility = View.VISIBLE
+                        }
+                    } else {
+                        Log.d("HomePanelFragment", "API call failed: ${response.message()}")
+                        Toast.makeText(requireContext(), "Failed to fetch attendance logs", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.e("HomePanelFragment", "Error fetching attendance: ${e.message}")
+                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

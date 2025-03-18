@@ -3,13 +3,19 @@ package com.example.terraconnection.activities
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.bumptech.glide.Glide
 import com.example.terraconnection.R
 import com.example.terraconnection.SessionManager
 import com.example.terraconnection.services.LocationService
@@ -17,7 +23,9 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import okhttp3.*
 import org.json.JSONObject
@@ -36,6 +44,7 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
     private var classId: String = ""
     private var isReconnecting = false
     private val reconnectHandler = Handler(Looper.getMainLooper())
+    private val markers = mutableMapOf<String, Marker?>()
     private val reconnectRunnable = object : Runnable {
         override fun run() {
             if (!isFinishing) {
@@ -48,6 +57,7 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         private const val WEBSOCKET_URL = "wss://terraconnection.online/ws"
+        private const val BASE_URL = "https://terraconnection.online"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,13 +121,19 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
                 try {
                     val json = JSONObject(text)
                     runOnUiThread {
-                        if (json.has("type") && json.getString("type") == "location-update") {
-                            updateStudentMarker(
-                                json.getString("studentId"),
-                                json.getString("studentName"),
-                                json.getDouble("latitude"),
-                                json.getDouble("longitude")
-                            )
+                        when (json.getString("type")) {
+                            "location-update" -> {
+                                updateStudentMarker(
+                                    json.getString("studentId"),
+                                    json.getString("studentName"),
+                                    json.getDouble("latitude"),
+                                    json.getDouble("longitude"),
+                                    json.optString("profilePicture")
+                                )
+                            }
+                            "stop-sharing" -> {
+                                removeStudentMarker(json.getString("studentId"))
+                            }
                         }
                     }
                 } catch (e: Exception) {
@@ -154,7 +170,7 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
             ?: throw Exception("No authentication token found")
 
         val request = Request.Builder()
-            .url("https://terraconnection.online/api/location/class/$classId")
+            .url("$BASE_URL/api/location/class/$classId")
             .addHeader("Authorization", token)
             .build()
 
@@ -193,7 +209,8 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
                                         location.getString("studentId"),
                                         location.getString("studentName"),
                                         location.getDouble("latitude"),
-                                        location.getDouble("longitude")
+                                        location.getDouble("longitude"),
+                                        location.optString("profilePicture")
                                     )
                                 }
                             }
@@ -212,19 +229,50 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         })
     }
 
+    private fun createCustomMarker(profilePictureUrl: String?): Bitmap {
+        val markerView = LayoutInflater.from(this).inflate(R.layout.custom_marker, null)
+        val profileImageView = markerView.findViewById<ImageView>(R.id.profile_picture)
+
+        if (!profilePictureUrl.isNullOrEmpty()) {
+            Glide.with(this)
+                .load("$BASE_URL$profilePictureUrl")
+                .placeholder(R.drawable.default_avatar)
+                .error(R.drawable.default_avatar)
+                .circleCrop()
+                .into(profileImageView)
+        }
+
+        val width = resources.getDimensionPixelSize(R.dimen.marker_width)
+        val height = resources.getDimensionPixelSize(R.dimen.marker_height)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        markerView.measure(width, height)
+        markerView.layout(0, 0, width, height)
+        markerView.draw(canvas)
+        return bitmap
+    }
+
     private fun updateStudentMarker(
         studentId: String,
         studentName: String,
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        profilePictureUrl: String?
     ) {
         val position = LatLng(latitude, longitude)
-        map.addMarker(
-            MarkerOptions()
-                .position(position)
-                .title(studentName)
-        )
+        val markerOptions = MarkerOptions()
+            .position(position)
+            .title(studentName)
+            .icon(BitmapDescriptorFactory.fromBitmap(createCustomMarker(profilePictureUrl)))
+
+        markers[studentId]?.remove()
+        markers[studentId] = map.addMarker(markerOptions)
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 15f))
+    }
+
+    private fun removeStudentMarker(studentId: String) {
+        markers[studentId]?.remove()
+        markers.remove(studentId)
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -253,8 +301,8 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
             } else {
                 Toast.makeText(
                     this,
-                    "Location permission is required",
-                    Toast.LENGTH_SHORT
+                    "Location permission is required for this feature",
+                    Toast.LENGTH_LONG
                 ).show()
             }
         }
@@ -262,8 +310,8 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onDestroy() {
         super.onDestroy()
-        reconnectHandler.removeCallbacks(reconnectRunnable)
         webSocket?.close(1000, "Activity destroyed")
+        reconnectHandler.removeCallbacks(reconnectRunnable)
         stopService(Intent(this, LocationService::class.java))
     }
 } 
