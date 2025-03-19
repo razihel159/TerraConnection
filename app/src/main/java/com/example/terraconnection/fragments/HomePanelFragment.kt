@@ -30,6 +30,9 @@ import java.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
+import com.bumptech.glide.Glide
+import androidx.core.content.ContextCompat
+import com.example.terraconnection.adapters.StudentStatusAdapter
 
 class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClickListener {
 
@@ -37,6 +40,7 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
     private val binding get() = _binding!!
     private val apiService = RetrofitClient.apiService
     private lateinit var attendanceAdapter: AttendanceLogAdapter
+    private lateinit var studentStatusAdapter: StudentStatusAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -57,34 +61,53 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
 
         val role = SessionManager.getRole(requireContext())
 
+        // For guardian role, only show student status
+        if (role == "guardian") {
+            binding.apply {
+                // Hide unnecessary sections
+                subjectNotification.visibility = View.GONE
+                tvTodaySchedule.visibility = View.GONE
+                subjectCard.visibility = View.GONE
+                tvNoSchedule.visibility = View.GONE
+                attendanceLog.visibility = View.GONE
+                
+                // Show student status section and setup RecyclerView
+                studentStatusContainer.visibility = View.VISIBLE
+                setupStudentStatusRecyclerView()
+                
+                // Start fetching student info
+                lifecycleScope.launch {
+                    fetchUserDetails()
+                    fetchLinkedStudents()
+                }
+            }
+            return
+        }
+
         // Pre-set initial visibility to INVISIBLE instead of GONE to maintain layout
-        binding.studentStatus.alpha = 0f
+        binding.studentStatusContainer.alpha = 0f
         binding.attendanceLog.alpha = 0f
-        binding.notifyButton.alpha = 0f
 
         when (role) {
             "student" -> {
-                binding.studentStatus.visibility = View.GONE
+                binding.studentStatusContainer.visibility = View.GONE
             }
             "guardian" -> {
-                binding.notifyButton.visibility = View.GONE
+                binding.subjectNotification.visibility = View.GONE
             }
             "professor" -> {
                 binding.attendanceLog.visibility = View.GONE
-                binding.studentStatus.visibility = View.GONE
+                binding.studentStatusContainer.visibility = View.GONE
                 binding.subjectNotification.visibility = View.GONE
             }
         }
 
         // Animate visible elements
         if (role != "student") {
-            animateViewIn(binding.studentStatus)
+            animateViewIn(binding.studentStatusContainer)
         }
         if (role != "professor") {
             animateViewIn(binding.attendanceLog)
-        }
-        if (role != "guardian") {
-            animateViewIn(binding.notifyButton)
         }
 
         binding.subjectNotification.setOnClickListener {
@@ -138,7 +161,11 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                 val token = SessionManager.getToken(requireContext())
                 if (token == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "No token found, please log in again", Toast.LENGTH_SHORT).show()
+                        binding.rvAttendanceLogs.visibility = View.GONE
+                        binding.tvNoLogs.apply {
+                            text = "Please log in again to view logs"
+                            visibility = View.VISIBLE
+                        }
                     }
                     return@launch
                 }
@@ -161,13 +188,21 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                         }
                     } else {
                         Log.d("HomePanelFragment", "API call failed: ${response.message()}")
-                        Toast.makeText(requireContext(), "Failed to fetch attendance logs", Toast.LENGTH_SHORT).show()
+                        binding.rvAttendanceLogs.visibility = View.GONE
+                        binding.tvNoLogs.apply {
+                            text = "Failed to fetch attendance logs"
+                            visibility = View.VISIBLE
+                        }
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e("HomePanelFragment", "Error fetching attendance: ${e.message}")
-                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    binding.rvAttendanceLogs.visibility = View.GONE
+                    binding.tvNoLogs.apply {
+                        text = "Error: ${e.message}"
+                        visibility = View.VISIBLE
+                    }
                 }
             }
         }
@@ -183,7 +218,7 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                 val user = response.body()
                 if (user != null) {
                     val fullName = "${user.first_name} ${user.last_name}"
-                    binding.loginGreeting.text = "Hello $fullName"
+                    binding.loginGreeting.text = "Hello, $fullName"
                 }
             } else {
                 Log.e("User Fetch", "Failed: ${response.message()}")
@@ -203,6 +238,12 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
             // Hide notification section for professor role
             if (role == "professor") {
                 binding.subjectNotification.visibility = View.GONE
+            }
+
+            // For guardian role, fetch linked student's information
+            if (role == "guardian") {
+                fetchLinkedStudents()
+                return
             }
 
             val scheduleResponse = when (role) {
@@ -240,27 +281,25 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                         false
                     )
                     binding.subjectCard.adapter = adapter
+                    binding.subjectCard.visibility = View.VISIBLE
+                    binding.tvNoSchedule.visibility = View.GONE
                 } else {
-                    // Show a message when there are no classes today
-                    Toast.makeText(
-                        requireContext(),
-                        "No classes scheduled for today",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    binding.subjectCard.visibility = View.GONE
+                    binding.tvNoSchedule.visibility = View.VISIBLE
                 }
             } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Failed to load schedule: ${scheduleResponse.message()}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                binding.subjectCard.visibility = View.GONE
+                binding.tvNoSchedule.apply {
+                    text = "Failed to load schedule"
+                    visibility = View.VISIBLE
+                }
             }
         } catch (e: Exception) {
-            Toast.makeText(
-                requireContext(),
-                "Error: ${e.message}",
-                Toast.LENGTH_SHORT
-            ).show()
+            binding.subjectCard.visibility = View.GONE
+            binding.tvNoSchedule.apply {
+                text = "Error: ${e.message}"
+                visibility = View.VISIBLE
+            }
         } finally {
             binding.loadingIndicator.visibility = View.GONE
         }
@@ -281,6 +320,61 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
             }
         } catch (e: Exception) {
             Log.e("Notifications", "Error fetching notifications: ${e.message}")
+        }
+    }
+
+    private fun setupStudentStatusRecyclerView() {
+        studentStatusAdapter = StudentStatusAdapter()
+        binding.rvLinkedStudents.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = studentStatusAdapter
+        }
+    }
+
+    private suspend fun fetchLinkedStudents() {
+        try {
+            val token = SessionManager.getToken(requireContext())?.let { "Bearer $it" }
+                ?: throw Exception("No authentication token found")
+
+            val response = apiService.getLinkedStudents(token)
+            if (response.isSuccessful) {
+                val linkedStudents = response.body()?.students
+                withContext(Dispatchers.Main) {
+                    if (linkedStudents.isNullOrEmpty()) {
+                        binding.studentStatusContainer.visibility = View.GONE
+                        Toast.makeText(
+                            requireContext(),
+                            "No linked students found",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        studentStatusAdapter.updateStudents(linkedStudents)
+                        binding.studentStatusContainer.visibility = View.VISIBLE
+                    }
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    binding.studentStatusContainer.visibility = View.GONE
+                    Toast.makeText(
+                        requireContext(),
+                        "Failed to fetch linked students: ${response.message()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                binding.studentStatusContainer.visibility = View.GONE
+                Toast.makeText(
+                    requireContext(),
+                    "Error: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } finally {
+            withContext(Dispatchers.Main) {
+                binding.loadingIndicator.visibility = View.GONE
+            }
         }
     }
 

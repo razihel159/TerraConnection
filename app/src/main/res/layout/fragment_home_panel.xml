@@ -114,6 +114,17 @@
                     android:clipToPadding="false"
                     android:nestedScrollingEnabled="false" />
 
+                <TextView
+                    android:id="@+id/tvNoSchedule"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="No classes scheduled for today"
+                    android:textAlignment="center"
+                    android:textSize="16sp"
+                    android:padding="16dp"
+                    android:textColor="@color/violet"
+                    android:visibility="gone"/>
+
                 <!-- Attendance Log Section -->
                 <LinearLayout
                     android:id="@+id/attendanceLog"
@@ -123,13 +134,14 @@
                     android:layout_marginTop="24dp">
 
                     <TextView
+                        android:id="@+id/tvAttendanceTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:text="Attendance Logs"
+                        android:text="Recent Attendance"
                         android:textSize="20sp"
                         android:textStyle="bold"
-                        android:textColor="@color/white"/>
+                        android:textColor="@color/violet"
+                        android:layout_marginBottom="16dp"/>
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rvAttendanceLogs"
@@ -140,85 +152,42 @@
 
                     <TextView
                         android:id="@+id/tvNoLogs"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
                         android:text="No recent attendance logs"
-                        android:textColor="@color/white"
+                        android:textAlignment="center"
                         android:textSize="16sp"
+                        android:padding="16dp"
+                        android:textColor="@color/violet"
                         android:visibility="gone"/>
                 </LinearLayout>
 
                 <!-- Student Status Section -->
                 <LinearLayout
-                    android:id="@+id/studentStatus"
+                    android:id="@+id/studentStatusContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginTop="24dp">
+                    android:visibility="gone">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:text="Students"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/white"/>
-
-                    <androidx.cardview.widget.CardView
-                        android:id="@+id/studentStatusCard"
+                        android:id="@+id/tvLinkedStudentsTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:cardElevation="4dp"
-                        app:cardCornerRadius="8dp">
+                        android:layout_marginHorizontal="16dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="8dp"
+                        android:text="Linked Students"
+                        android:textColor="@color/violet"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
 
-                        <androidx.constraintlayout.widget.ConstraintLayout
-                            android:id="@+id/constraintLayout"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:padding="16dp">
-
-                            <TextView
-                                android:id="@+id/studentName"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Student Name"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:layout_marginTop="12dp"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintStart_toStartOf="parent" />
-
-                            <View
-                                android:id="@+id/statusIndicator"
-                                android:layout_width="12dp"
-                                android:layout_height="12dp"
-                                android:background="@drawable/status_indicator"
-                                android:layout_marginEnd="12dp"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toEndOf="parent" />
-
-                            <ImageButton
-                                android:id="@+id/notifyButton"
-                                android:layout_width="30dp"
-                                android:layout_height="30dp"
-                                android:src="@drawable/notification"
-                                android:background="?attr/selectableItemBackgroundBorderless"
-                                android:scaleType="centerInside"
-                                app:tint="@android:color/holo_red_dark"
-                                android:layout_marginEnd="8dp"
-                                android:clickable="true"
-                                android:focusable="true"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toStartOf="@id/statusIndicator" />
-
-                        </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    </androidx.cardview.widget.CardView>
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvLinkedStudents"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clipToPadding="false"
+                        android:paddingBottom="8dp" />
 
                 </LinearLayout>
             </LinearLayout>

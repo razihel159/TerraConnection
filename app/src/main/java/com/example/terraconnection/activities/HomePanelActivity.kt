@@ -18,6 +18,7 @@ import com.example.terraconnection.ThemeManager
 import com.example.terraconnection.SessionManager
 import com.example.terraconnection.fragments.CalendarProfFragment
 import com.example.terraconnection.fragments.CalendarStudFragment
+import com.example.terraconnection.fragments.CalendarGuardFragment
 import com.example.terraconnection.fragments.HomePanelFragment
 import com.example.terraconnection.fragments.SettingsFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -26,45 +27,28 @@ import androidx.fragment.app.Fragment
 class HomePanelActivity : AppCompatActivity() {
     private val fragments = mutableMapOf<Int, Fragment>()
     
-    private val requiredPermissions = mutableListOf(
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.ACCESS_COARSE_LOCATION
-    ).apply {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            add(Manifest.permission.POST_NOTIFICATIONS)
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            add(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
-        }
+    private val requiredPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.POST_NOTIFICATIONS
+        )
+    } else {
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
     }
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val deniedPermissions = permissions.filter { !it.value }.keys
-        
-        if (deniedPermissions.isNotEmpty()) {
-            // Check if we should show rationale for any permission
-            val shouldShowRationale = deniedPermissions.any {
-                shouldShowRequestPermissionRationale(it)
-            }
-
-            if (shouldShowRationale) {
-                showPermissionRationaleDialog(deniedPermissions.toList())
+        val allGranted = permissions.entries.all { it.value }
+        if (!allGranted) {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                showPermissionRationaleDialog()
             } else {
-                // User has selected "Don't ask again", direct them to settings
                 showSettingsDialog()
-            }
-        }
-
-        // Special handling for notification permission
-        permissions[Manifest.permission.POST_NOTIFICATIONS]?.let { granted ->
-            if (!granted) {
-                Toast.makeText(
-                    this,
-                    "Notification permission denied. You won't receive class notifications.",
-                    Toast.LENGTH_LONG
-                ).show()
             }
         }
     }
@@ -86,7 +70,11 @@ class HomePanelActivity : AppCompatActivity() {
 
         // Initialize fragments
         fragments[R.id.nav_home] = HomePanelFragment()
-        fragments[R.id.nav_calendar] = if (role == "professor") CalendarProfFragment() else CalendarStudFragment()
+        fragments[R.id.nav_calendar] = when (role) {
+            "professor" -> CalendarProfFragment()
+            "guardian" -> CalendarGuardFragment()
+            else -> CalendarStudFragment()
+        }
         fragments[R.id.nav_profile] = SettingsFragment()
         fragments[R.id.nav_location] = MapsFragment()
 
@@ -119,49 +107,36 @@ class HomePanelActivity : AppCompatActivity() {
         }
     }
 
-    private fun showPermissionRationaleDialog(permissions: List<String>) {
-        val message = buildString {
-            append("The following permissions are required:\n\n")
-            permissions.forEach { permission ->
-                append("• ${getPermissionReason(permission)}\n")
-            }
-        }
-
+    private fun showPermissionRationaleDialog() {
         AlertDialog.Builder(this)
-            .setTitle("Permissions Required")
-            .setMessage(message)
+            .setTitle("Location Permission Required")
+            .setMessage("This app needs location permission to function properly. Please grant the permission.")
             .setPositiveButton("Grant") { _, _ ->
-                permissionLauncher.launch(permissions.toTypedArray())
+                permissionLauncher.launch(requiredPermissions)
             }
             .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()
+                finish()
             }
+            .create()
             .show()
     }
 
     private fun showSettingsDialog() {
         AlertDialog.Builder(this)
-            .setTitle("Permissions Required")
-            .setMessage("Some permissions are required for the app to function properly. Please grant them in Settings.")
+            .setTitle("Permission Required")
+            .setMessage("Location permission is required for this app. Please enable it in settings.")
             .setPositiveButton("Settings") { _, _ ->
-                // Open app settings
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                intent.data = Uri.fromParts("package", packageName, null)
+                val uri = Uri.fromParts("package", packageName, null)
+                intent.data = uri
                 startActivity(intent)
             }
             .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()
+                finish()
             }
+            .create()
             .show()
-    }
-
-    private fun getPermissionReason(permission: String): String {
-        return when (permission) {
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION -> "Location access to share your position"
-            Manifest.permission.FOREGROUND_SERVICE_LOCATION -> "Background location access for continuous updates"
-            Manifest.permission.POST_NOTIFICATIONS -> "Notifications to receive important class updates and reminders"
-            else -> "Required for app functionality"
-        }
     }
 }

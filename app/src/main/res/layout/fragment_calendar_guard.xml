@@ -5,13 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/violet"
-    tools:context=".fragments.CalendarProfFragment">
+    tools:context=".fragments.CalendarGuardFragment">
 
     <!-- Header Text -->
     <TextView
         android:id="@+id/selectDateText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="Select a date to view attendance logs"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@android:color/white"
@@ -42,21 +43,53 @@
                 android:padding="16dp">
 
                 <CalendarView
-                    android:id="@+id/schedViewCal"
+                    android:id="@+id/guardViewCal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"/>
 
+                <!-- Student List -->
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/profSched"
+                    android:id="@+id/studentList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:clipToPadding="false"/>
+
+                <TextView
+                    android:id="@+id/noStudentsText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="32dp"
+                    android:text="No linked students found"
+                    android:textSize="16sp"
+                    android:textColor="@color/violet"
+                    android:visibility="gone"/>
+
+                <!-- Attendance Logs -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/attendanceLogs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:clipToPadding="false"
+                    android:visibility="gone"/>
+
+                <TextView
+                    android:id="@+id/noLogsText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="32dp"
+                    android:text="No attendance logs for this date"
+                    android:textSize="16sp"
+                    android:textColor="@color/violet"
+                    android:visibility="gone"/>
 
             </LinearLayout>
         </ScrollView>
 
     </androidx.cardview.widget.CardView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout> 

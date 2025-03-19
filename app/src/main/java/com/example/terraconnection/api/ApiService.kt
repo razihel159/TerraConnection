@@ -14,6 +14,8 @@ import com.example.terraconnection.data.NotificationResponse
 import com.example.terraconnection.data.FcmTokenRequest
 import com.example.terraconnection.data.MessageResponse
 import com.example.terraconnection.data.NotificationsResponse
+import com.example.terraconnection.data.AttendanceLog
+import com.example.terraconnection.data.GPSLocation
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -77,4 +79,36 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("id") notificationId: Int
     ): Response<MessageResponse>
+
+    @GET("api/guardian/linked-students")
+    suspend fun getLinkedStudents(
+        @Header("Authorization") token: String
+    ): Response<LinkedStudentsResponse>
+
+    @GET("api/guardian/child-status/{studentId}")
+    suspend fun getChildStatus(
+        @Header("Authorization") token: String,
+        @Path("studentId") studentId: String
+    ): Response<ChildStatusResponse>
 }
+
+data class LinkedStudentsResponse(
+    val students: List<StudentStatus>
+)
+
+data class StudentStatus(
+    val id: Int,
+    val first_name: String,
+    val last_name: String,
+    val school_id: String,
+    val onCampus: Boolean,
+    val lastLog: AttendanceLog?,
+    val lastGPS: GPSLocation?
+)
+
+data class ChildStatusResponse(
+    val studentId: String,
+    val onCampus: Boolean,
+    val lastLog: AttendanceLog?,
+    val lastGPS: GPSLocation?
+)
