@@ -65,6 +65,30 @@ class MapsFragment : Fragment() {
         }
         recyclerView.adapter = adapter
 
+        // Initialize empty state
+        val emptyState = view.findViewById<View>(R.id.emptyState)
+
+        // Update adapter to handle empty state
+        adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+            override fun onChanged() {
+                checkEmpty()
+            }
+
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                checkEmpty()
+            }
+
+            override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
+                checkEmpty()
+            }
+
+            private fun checkEmpty() {
+                val isEmpty = adapter.itemCount == 0
+                recyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
+                emptyState.visibility = if (isEmpty) View.VISIBLE else View.GONE
+            }
+        })
+
         fetchClasses()
     }
 

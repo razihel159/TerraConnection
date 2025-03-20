@@ -26,47 +26,64 @@
 
     <TextView
         android:id="@+id/loginGreeting"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Hello, "
         android:textColor="@android:color/white"
-        android:textSize="24sp"
+        android:textSize="18sp"
         android:textStyle="bold"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/notificationContainer"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <FrameLayout
+    <LinearLayout
         android:id="@+id/notificationContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:layout_marginEnd="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/loginGreeting"
         app:layout_constraintBottom_toBottomOf="@id/loginGreeting">
 
-        <ImageButton
-            android:id="@+id/subjectNotification"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_notification"
-            app:tint="@android:color/white" />
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp">
 
-        <TextView
-            android:id="@+id/notificationBadge"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_gravity="top|end"
-            android:background="@drawable/notification_badge"
-            android:gravity="center"
-            android:textColor="@color/white"
-            android:textSize="10sp"
-            android:visibility="gone"
-            android:text="0" />
-    </FrameLayout>
+            <ImageButton
+                android:id="@+id/subjectNotification"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_notification"
+                app:tint="@android:color/white" />
+
+            <TextView
+                android:id="@+id/notificationBadge"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="top|end"
+                android:background="@drawable/notification_badge"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:textSize="10sp"
+                android:visibility="gone"
+                android:text="0" />
+        </FrameLayout>
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/profileImage"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/default_profile"
+            app:civ_border_width="2dp"
+            app:civ_border_color="@android:color/white"/>
+    </LinearLayout>
 
     <!-- Main Content -->
     <androidx.cardview.widget.CardView
@@ -114,6 +131,42 @@
                     android:clipToPadding="false"
                     android:nestedScrollingEnabled="false" />
 
+                <!-- Empty State for Schedule -->
+                <LinearLayout
+                    android:id="@+id/scheduleEmptyState"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_marginTop="32dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:src="@drawable/ic_calendar"
+                        android:alpha="0.6"
+                        app:tint="@color/violet"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="No classes scheduled for today"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/violet"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Check back later for updates"
+                        android:textSize="14sp"
+                        android:textColor="#757575"
+                        android:gravity="center"/>
+                </LinearLayout>
+
                 <TextView
                     android:id="@+id/tvNoSchedule"
                     android:layout_width="match_parent"
@@ -149,6 +202,42 @@
                         android:layout_height="wrap_content"
                         android:clipToPadding="false"
                         android:background="@android:color/transparent"/>
+
+                    <!-- Empty State for Attendance -->
+                    <LinearLayout
+                        android:id="@+id/attendanceEmptyState"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginTop="32dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="120dp"
+                            android:layout_height="120dp"
+                            android:src="@drawable/ic_notify"
+                            android:alpha="0.6"
+                            app:tint="@color/violet"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="No recent attendance logs"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/violet"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Your attendance history will appear here"
+                            android:textSize="14sp"
+                            android:textColor="#757575"
+                            android:gravity="center"/>
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvNoLogs"

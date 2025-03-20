@@ -51,6 +51,42 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"/>
 
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/emptyState"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:src="@drawable/ic_location_vector"
+                    android:alpha="0.6"
+                    app:tint="@color/violet"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="No classes available"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/violet"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Your classes will appear here"
+                    android:textSize="14sp"
+                    android:textColor="#757575"
+                    android:gravity="center"/>
+
+            </LinearLayout>
+
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

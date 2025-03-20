@@ -33,6 +33,14 @@ import java.text.SimpleDateFormat
 import com.bumptech.glide.Glide
 import androidx.core.content.ContextCompat
 import com.example.terraconnection.adapters.StudentStatusAdapter
+import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.Window
+import com.example.terraconnection.activities.LoginPageActivity
+import com.example.terraconnection.data.User
+import com.example.terraconnection.databinding.DialogProfileBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClickListener {
 
@@ -41,6 +49,7 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
     private val apiService = RetrofitClient.apiService
     private lateinit var attendanceAdapter: AttendanceLogAdapter
     private lateinit var studentStatusAdapter: StudentStatusAdapter
+    private var currentUser: User? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -127,6 +136,11 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                 fetchNotifications()
             }
         }
+
+        // Setup profile image click listener
+        binding.profileImage.setOnClickListener {
+            showProfileDialog()
+        }
     }
 
     private fun animateViewIn(view: View) {
@@ -181,28 +195,40 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                         if (logs.isNotEmpty()) {
                             attendanceAdapter.updateLogs(logs)
                             binding.rvAttendanceLogs.visibility = View.VISIBLE
+                            binding.attendanceEmptyState.visibility = View.GONE
                             binding.tvNoLogs.visibility = View.GONE
+                            // Remove underline when not empty
+                            binding.tvAttendanceTitle.paintFlags = binding.tvAttendanceTitle.paintFlags and android.graphics.Paint.UNDERLINE_TEXT_FLAG.inv()
                         } else {
                             binding.rvAttendanceLogs.visibility = View.GONE
-                            binding.tvNoLogs.visibility = View.VISIBLE
+                            binding.attendanceEmptyState.visibility = View.VISIBLE
+                            binding.tvNoLogs.visibility = View.GONE
+                            // Add underline when empty
+                            binding.tvAttendanceTitle.paintFlags = binding.tvAttendanceTitle.paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
                         }
                     } else {
                         Log.d("HomePanelFragment", "API call failed: ${response.message()}")
                         binding.rvAttendanceLogs.visibility = View.GONE
+                        binding.attendanceEmptyState.visibility = View.VISIBLE
                         binding.tvNoLogs.apply {
                             text = "Failed to fetch attendance logs"
                             visibility = View.VISIBLE
                         }
+                        // Add underline when error
+                        binding.tvAttendanceTitle.paintFlags = binding.tvAttendanceTitle.paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e("HomePanelFragment", "Error fetching attendance: ${e.message}")
                     binding.rvAttendanceLogs.visibility = View.GONE
+                    binding.attendanceEmptyState.visibility = View.VISIBLE
                     binding.tvNoLogs.apply {
                         text = "Error: ${e.message}"
                         visibility = View.VISIBLE
                     }
+                    // Add underline when error
+                    binding.tvAttendanceTitle.paintFlags = binding.tvAttendanceTitle.paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
                 }
             }
         }
@@ -217,8 +243,23 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
             if (response.isSuccessful) {
                 val user = response.body()
                 if (user != null) {
+                    currentUser = user
                     val fullName = "${user.first_name} ${user.last_name}"
                     binding.loginGreeting.text = "Hello, $fullName"
+
+                    // Load profile picture
+                    if (!user.profile_picture.isNullOrEmpty()) {
+                        val profilePicUrl = if (user.profile_picture.startsWith("/")) {
+                            RetrofitClient.BASE_URL.removeSuffix("/") + user.profile_picture
+                        } else {
+                            RetrofitClient.BASE_URL.removeSuffix("/") + "/" + user.profile_picture
+                        }
+                        Glide.with(requireContext())
+                            .load(profilePicUrl)
+                            .placeholder(R.drawable.default_profile)
+                            .error(R.drawable.default_profile)
+                            .into(binding.profileImage)
+                    }
                 }
             } else {
                 Log.e("User Fetch", "Failed: ${response.message()}")
@@ -282,24 +323,26 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                     )
                     binding.subjectCard.adapter = adapter
                     binding.subjectCard.visibility = View.VISIBLE
+                    binding.scheduleEmptyState.visibility = View.GONE
                     binding.tvNoSchedule.visibility = View.GONE
+                    // Remove underline when not empty
+                    binding.tvTodaySchedule.paintFlags = binding.tvTodaySchedule.paintFlags and android.graphics.Paint.UNDERLINE_TEXT_FLAG.inv()
                 } else {
                     binding.subjectCard.visibility = View.GONE
-                    binding.tvNoSchedule.visibility = View.VISIBLE
+                    binding.scheduleEmptyState.visibility = View.VISIBLE
+                    binding.tvNoSchedule.visibility = View.GONE
+                    // Add underline when empty
+                    binding.tvTodaySchedule.paintFlags = binding.tvTodaySchedule.paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
                 }
             } else {
                 binding.subjectCard.visibility = View.GONE
-                binding.tvNoSchedule.apply {
-                    text = "Failed to load schedule"
-                    visibility = View.VISIBLE
-                }
+                binding.scheduleEmptyState.visibility = View.VISIBLE
+                binding.tvNoSchedule.visibility = View.GONE
             }
         } catch (e: Exception) {
             binding.subjectCard.visibility = View.GONE
-            binding.tvNoSchedule.apply {
-                text = "Error: ${e.message}"
-                visibility = View.VISIBLE
-            }
+            binding.scheduleEmptyState.visibility = View.VISIBLE
+            binding.tvNoSchedule.visibility = View.GONE
         } finally {
             binding.loadingIndicator.visibility = View.GONE
         }
@@ -417,6 +460,58 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                     .start()
             }
         }
+    }
+
+    private fun showProfileDialog() {
+        val dialog = Dialog(requireContext())
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        
+        val dialogBinding = DialogProfileBinding.inflate(layoutInflater)
+        dialog.setContentView(dialogBinding.root)
+
+        currentUser?.let { user ->
+            // Set user details
+            dialogBinding.fullNameText.text = "${user.first_name} ${user.last_name}"
+            dialogBinding.emailText.text = user.email
+
+            // Load profile picture
+            if (!user.profile_picture.isNullOrEmpty()) {
+                val profilePicUrl = if (user.profile_picture.startsWith("/")) {
+                    RetrofitClient.BASE_URL.removeSuffix("/") + user.profile_picture
+                } else {
+                    RetrofitClient.BASE_URL.removeSuffix("/") + "/" + user.profile_picture
+                }
+                Glide.with(requireContext())
+                    .load(profilePicUrl)
+                    .placeholder(R.drawable.default_profile)
+                    .error(R.drawable.default_profile)
+                    .into(dialogBinding.profileImageLarge)
+            }
+        }
+
+        // Setup logout button
+        dialogBinding.logoutButton.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Logout")
+                .setMessage("Are you sure you want to log out?")
+                .setPositiveButton("Yes") { _, _ ->
+                    dialog.dismiss()
+                    logout()
+                }
+                .setNegativeButton("No", null)
+                .show()
+        }
+
+        dialog.show()
+    }
+
+    private fun logout() {
+        SessionManager.clearSession(requireContext())
+        val intent = Intent(requireContext(), LoginPageActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        requireActivity().finish()
     }
 
     override fun onDestroyView() {
