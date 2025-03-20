@@ -86,14 +86,11 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 LOCATION_PERMISSION_REQUEST_CODE
             )
-        } else {
-            startLocationService()
         }
     }
 
     private fun startLocationService() {
-        val serviceIntent = Intent(this, LocationService::class.java)
-        startService(serviceIntent)
+        // Removed as we don't want to start/stop the service from this activity
     }
 
     private fun setupWebSocket() {
@@ -202,16 +199,31 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
 
                         val locations = json.getJSONArray("data")
                         runOnUiThread {
+                            // Clear existing markers first
+                            markers.values.forEach { it?.remove() }
+                            markers.clear()
+                            
+                            val currentTimeMillis = System.currentTimeMillis()
                             for (i in 0 until locations.length()) {
                                 val location = locations.getJSONObject(i)
-                                if (location.has("latitude") && location.has("longitude")) {
-                                    updateStudentMarker(
-                                        location.getString("studentId"),
-                                        location.getString("studentName"),
-                                        location.getDouble("latitude"),
-                                        location.getDouble("longitude"),
-                                        location.optString("profilePicture")
-                                    )
+                                if (location.has("latitude") && 
+                                    location.has("longitude") && 
+                                    location.has("timestamp")) {
+                                    
+                                    // Parse the timestamp from the server
+                                    val timestamp = location.getString("timestamp")
+                                    val locationTime = java.time.Instant.parse(timestamp).toEpochMilli()
+                                    
+                                    // Only show markers for locations updated in the last minute
+                                    if (currentTimeMillis - locationTime <= 1 * 60 * 1000) {
+                                        updateStudentMarker(
+                                            location.getString("studentId"),
+                                            location.getString("studentName"),
+                                            location.getDouble("latitude"),
+                                            location.getDouble("longitude"),
+                                            location.optString("profilePicture")
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -294,7 +306,6 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startLocationService()
                 if (::map.isInitialized) {
                     map.isMyLocationEnabled = true
                 }
@@ -312,6 +323,6 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onDestroy()
         webSocket?.close(1000, "Activity destroyed")
         reconnectHandler.removeCallbacks(reconnectRunnable)
-        stopService(Intent(this, LocationService::class.java))
+        // Removed stopService call as we don't want to stop the location service
     }
 } 
