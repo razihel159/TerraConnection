@@ -16,11 +16,15 @@ import com.example.terraconnection.data.MessageResponse
 import com.example.terraconnection.data.NotificationsResponse
 import com.example.terraconnection.data.AttendanceLog
 import com.example.terraconnection.data.GPSLocation
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Query
 import retrofit2.http.Path
 
@@ -90,6 +94,13 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("studentId") studentId: String
     ): Response<ChildStatusResponse>
+
+    @Multipart
+    @PUT("api/user/profile-picture")
+    suspend fun updateProfilePicture(
+        @Header("Authorization") token: String,
+        @Part profilePicture: MultipartBody.Part
+    ): Response<ProfilePictureResponse>
 }
 
 data class LinkedStudentsResponse(
@@ -111,4 +122,9 @@ data class ChildStatusResponse(
     val onCampus: Boolean,
     val lastLog: AttendanceLog?,
     val lastGPS: GPSLocation?
+)
+
+data class ProfilePictureResponse(
+    val message: String,
+    val profile_picture: String
 )

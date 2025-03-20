@@ -19,7 +19,8 @@ data class User(
     val first_name: String,
     val last_name: String,
     val email: String,
-    val school_id: String?
+    val school_id: String?,
+    val profile_picture: String?
 )
 
 data class Schedule(

@@ -38,6 +38,11 @@ class ListStudentActivity : AppCompatActivity() {
 
         sharedPreferences = getSharedPreferences("TerraPrefs", Context.MODE_PRIVATE)
 
+        // Setup back button
+        binding.backButton.setOnClickListener {
+            finish()
+        }
+
         // Initialize RecyclerView
         setupRecyclerView()
         setupNotificationButton()
@@ -77,8 +82,10 @@ class ListStudentActivity : AppCompatActivity() {
             val displayDate = displayFormat.format(dateFormat.parse(date)!!)
             binding.dateText.text = displayDate
             binding.dateText.visibility = View.VISIBLE
+            binding.notifyAllButton.visibility = View.GONE
         } else {
             binding.dateText.visibility = View.GONE
+            binding.notifyAllButton.visibility = View.VISIBLE
         }
 
         // Fetch attendance data

@@ -125,7 +125,8 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
                                     json.getString("studentName"),
                                     json.getDouble("latitude"),
                                     json.getDouble("longitude"),
-                                    json.optString("profilePicture")
+                                    json.optString("profilePicture"),
+                                    json.getString("role")
                                 )
                             }
                             "stop-sharing" -> {
@@ -221,7 +222,8 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
                                             location.getString("studentName"),
                                             location.getDouble("latitude"),
                                             location.getDouble("longitude"),
-                                            location.optString("profilePicture")
+                                            location.optString("profilePicture"),
+                                            location.getString("role")
                                         )
                                     }
                                 }
@@ -241,9 +243,16 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         })
     }
 
-    private fun createCustomMarker(profilePictureUrl: String?): Bitmap {
+    private fun createCustomMarker(profilePictureUrl: String?, isProf: Boolean): Bitmap {
         val markerView = LayoutInflater.from(this).inflate(R.layout.custom_marker, null)
         val profileImageView = markerView.findViewById<ImageView>(R.id.profile_picture)
+        val markerBackground = markerView.findViewById<ImageView>(R.id.marker_background)
+
+        // Set different background for professors
+        markerBackground.setImageResource(
+            if (isProf) R.drawable.marker_background_professor
+            else R.drawable.marker_background
+        )
 
         if (!profilePictureUrl.isNullOrEmpty()) {
             Glide.with(this)
@@ -269,13 +278,14 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         studentName: String,
         latitude: Double,
         longitude: Double,
-        profilePictureUrl: String?
+        profilePictureUrl: String?,
+        role: String = "student" // Default to student if role not provided
     ) {
         val position = LatLng(latitude, longitude)
         val markerOptions = MarkerOptions()
             .position(position)
             .title(studentName)
-            .icon(BitmapDescriptorFactory.fromBitmap(createCustomMarker(profilePictureUrl)))
+            .icon(BitmapDescriptorFactory.fromBitmap(createCustomMarker(profilePictureUrl, role == "professor")))
 
         markers[studentId]?.remove()
         markers[studentId] = map.addMarker(markerOptions)

@@ -3,7 +3,9 @@ package com.example.terraconnection.fragments
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -12,30 +14,62 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.bumptech.glide.Glide
 import com.example.terraconnection.R
 import com.example.terraconnection.SessionManager
 import com.example.terraconnection.activities.LoginPageActivity
 import com.example.terraconnection.api.RetrofitClient
 import com.example.terraconnection.data.User
+import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.*
+import com.example.terraconnection.databinding.FragmentSettingsBinding
 
 typealias Inflate<T> = (LayoutInflater, ViewGroup?, Boolean) -> T
 
 class SettingsFragment : Fragment() {
     private lateinit var prefs: SharedPreferences
+    private var _binding: FragmentSettingsBinding? = null
+    private val binding get() = _binding!!
+
+    private val getContent = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { selectedImageUri ->
+            startCrop(selectedImageUri)
+        }
+    }
+
+    private val cropImage = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == -1) { // RESULT_OK
+            val resultUri = UCrop.getOutput(result.data!!)
+            resultUri?.let { uri ->
+                uploadProfilePicture(uri)
+            }
+        } else if (result.resultCode == UCrop.RESULT_ERROR) {
+            val cropError = UCrop.getError(result.data!!)
+            Toast.makeText(requireContext(), "Error cropping image: ${cropError?.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_settings, container, false)
+    ): View {
+        _binding = FragmentSettingsBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -44,6 +78,11 @@ class SettingsFragment : Fragment() {
 
         setupUI(view)
         fetchUsers(view)
+
+        // Setup profile picture button
+        view.findViewById<Button>(R.id.btnChangeProfilePic).setOnClickListener {
+            getContent.launch("image/*")
+        }
     }
 
     private fun setupUI(view: View) {
@@ -128,6 +167,87 @@ class SettingsFragment : Fragment() {
         requireActivity().recreate()
     }
 
+    private fun startCrop(sourceUri: Uri) {
+        val destinationUri = Uri.fromFile(File(requireContext().cacheDir, "cropped_${System.currentTimeMillis()}.jpg"))
+        
+        val uCrop = UCrop.of(sourceUri, destinationUri)
+            .withAspectRatio(1f, 1f)
+            .withMaxResultSize(500, 500)
+
+        // Customize UCrop appearance
+        uCrop.withOptions(UCrop.Options().apply {
+            setCompressionQuality(80)
+            setHideBottomControls(false)
+            setFreeStyleCropEnabled(false)
+            setStatusBarColor(resources.getColor(R.color.violet, null))
+            setToolbarColor(resources.getColor(R.color.violet, null))
+            setToolbarTitle("Crop Profile Picture")
+        })
+
+        cropImage.launch(uCrop.getIntent(requireContext()))
+    }
+
+    private fun uploadProfilePicture(imageUri: Uri) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Convert Uri to File
+                val parcelFileDescriptor = requireContext().contentResolver.openFileDescriptor(imageUri, "r")
+                val inputStream = requireContext().contentResolver.openInputStream(imageUri)
+                val file = File(requireContext().cacheDir, "profile_picture_${System.currentTimeMillis()}.jpg")
+                val outputStream = FileOutputStream(file)
+                inputStream?.copyTo(outputStream)
+
+                // Create MultipartBody.Part
+                val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
+                val part = MultipartBody.Part.createFormData("profile_picture", file.name, requestBody)
+
+                // Get token
+                val token = SessionManager.getToken(requireContext())
+                if (token == null) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "No token found, please log in again", Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
+
+                // Make API call
+                val response = RetrofitClient.apiService.updateProfilePicture("Bearer $token", part)
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val profilePicPath = response.body()?.profile_picture
+                        if (profilePicPath != null) {
+                            // Update profile picture in UI
+                            val profilePicUrl = if (profilePicPath.startsWith("/")) {
+                                RetrofitClient.BASE_URL.removeSuffix("/") + profilePicPath
+                            } else {
+                                RetrofitClient.BASE_URL.removeSuffix("/") + "/" + profilePicPath
+                            }
+                            Glide.with(requireContext())
+                                .load(profilePicUrl)
+                                .placeholder(R.drawable.default_profile)
+                                .error(R.drawable.default_profile)
+                                .into(binding.profileImageView)
+                            
+                            Toast.makeText(requireContext(), "Profile picture updated successfully", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "Failed to update profile picture", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                // Clean up
+                file.delete()
+                
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.e("ProfilePicture", "Error uploading profile picture: ${e.message}")
+                    Toast.makeText(requireContext(), "Error uploading profile picture", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     private fun fetchUsers(view: View) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -151,6 +271,24 @@ class SettingsFragment : Fragment() {
                             view.findViewById<TextView>(R.id.firstNameText).text = "${user.first_name} ${user.last_name}"
                             view.findViewById<TextView>(R.id.emailText).text = user.email
                             view.findViewById<TextView>(R.id.studentIdText).text = user.school_id ?: "N/A"
+                            
+                            // Load profile picture if available
+                            if (!user.profile_picture.isNullOrEmpty()) {
+                                val profilePicUrl = if (user.profile_picture.startsWith("/")) {
+                                    RetrofitClient.BASE_URL.removeSuffix("/") + user.profile_picture
+                                } else {
+                                    RetrofitClient.BASE_URL.removeSuffix("/") + "/" + user.profile_picture
+                                }
+                                Glide.with(requireContext())
+                                    .load(profilePicUrl)
+                                    .placeholder(R.drawable.default_profile)
+                                    .error(R.drawable.default_profile)
+                                    .into(binding.profileImageView)
+                            } else {
+                                Glide.with(requireContext())
+                                    .load(R.drawable.default_profile)
+                                    .into(binding.profileImageView)
+                            }
                         }
                     } else {
                         withContext(Dispatchers.Main) {

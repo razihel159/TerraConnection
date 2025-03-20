@@ -6,7 +6,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "https://terraconnection.online/"
+    const val BASE_URL = "https://terraconnection.online/"
 
     private val client = OkHttpClient.Builder()
         .build()

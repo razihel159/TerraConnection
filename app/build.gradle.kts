@@ -115,4 +115,7 @@ dependencies {
     // Glide
     implementation(libs.glide)
     annotationProcessor(libs.compiler)
+
+    // Image Cropping
+    implementation(libs.ucrop)
 }

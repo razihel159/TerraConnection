@@ -10,61 +10,162 @@
     <!-- Header Text -->
     <TextView
         android:id="@+id/selectDateText"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Select a date to view attendance logs"
-        android:textSize="24sp"
+        android:text="Attendance History"
+        android:textSize="28sp"
         android:textStyle="bold"
         android:textColor="@android:color/white"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="24dp"
+        android:maxLines="2"
+        android:ellipsize="end"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+        android:id="@+id/selectDateSubtext"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="View your attendance records by date"
+        android:textSize="16sp"
+        android:textColor="#E6FFFFFF"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="@id/selectDateText"
+        app:layout_constraintEnd_toEndOf="@id/selectDateText"
+        app:layout_constraintTop_toBottomOf="@id/selectDateText"/>
 
     <!-- Main Content Card -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="24dp"
-        app:cardCornerRadius="24dp"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         app:cardBackgroundColor="@android:color/white"
-        app:layout_constraintTop_toBottomOf="@id/selectDateText"
+        app:layout_constraintTop_toBottomOf="@id/selectDateSubtext"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fillViewport="true">
+            android:fillViewport="true"
+            android:overScrollMode="never">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
+
+                <!-- Date Selection Header -->
+                <LinearLayout
+                    android:id="@+id/dateSelectionHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/date_header_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Selected Date"
+                        android:textSize="14sp"
+                        android:textColor="@color/violet"
+                        android:alpha="0.7"/>
+
+                    <TextView
+                        android:id="@+id/selectedDateDisplay"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/violet"
+                        android:layout_marginTop="4dp"
+                        tools:text="September 15, 2024"/>
+                </LinearLayout>
 
                 <CalendarView
                     android:id="@+id/studViewCal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"/>
+                    android:background="@android:color/white"
+                    android:theme="@style/CalendarViewCustom"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"/>
+
+                <TextView
+                    android:id="@+id/selectedDateHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Attendance Records"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/violet"/>
+
+                <ProgressBar
+                    android:id="@+id/loadingIndicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="32dp"
+                    android:visibility="gone"
+                    android:indeterminateTintMode="src_atop"
+                    android:indeterminateTint="@color/violet"/>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/attendanceLogs"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:clipToPadding="false"/>
+                    android:clipToPadding="false"
+                    android:paddingBottom="16dp"/>
 
-                <TextView
-                    android:id="@+id/noLogsText"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/emptyStateContainer"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:gravity="center"
                     android:layout_marginTop="32dp"
-                    android:text="No attendance logs for this date"
-                    android:textSize="16sp"
-                    android:textColor="@color/violet"
-                    android:visibility="gone"/>
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:src="@drawable/ic_calendar"
+                        android:alpha="0.6"/>
+
+                    <TextView
+                        android:id="@+id/noLogsText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="No attendance records found"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/violet"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Try selecting a different date"
+                        android:textSize="14sp"
+                        android:textColor="#757575"
+                        android:gravity="center"/>
+                </LinearLayout>
 
             </LinearLayout>
         </ScrollView>
