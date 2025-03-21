@@ -23,6 +23,8 @@ import com.example.terraconnection.fragments.HomePanelFragment
 import com.example.terraconnection.fragments.SettingsFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.fragment.app.Fragment
+import android.view.View
+import com.example.terraconnection.SpotlightTourManager
 
 class HomePanelActivity : AppCompatActivity() {
     private val fragments = mutableMapOf<Int, Fragment>()
@@ -43,13 +45,10 @@ class HomePanelActivity : AppCompatActivity() {
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val allGranted = permissions.entries.all { it.value }
-        if (!allGranted) {
-            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                showPermissionRationaleDialog()
-            } else {
-                showSettingsDialog()
-            }
+        if (permissions.all { it.value }) {
+            // All permissions granted
+        } else {
+            showPermissionRationaleDialog()
         }
     }
     
@@ -95,6 +94,14 @@ class HomePanelActivity : AppCompatActivity() {
                 true
             } ?: false
         }
+
+        // Check if we should show the spotlight tour
+        if (SpotlightTourManager.shouldShowTour(this)) {
+            // Wait for views to be laid out
+            bottomNav.post {
+                showSpotlightTour(role ?: "student", bottomNav)
+            }
+        }
     }
 
     private fun requestPermissions() {
@@ -137,6 +144,35 @@ class HomePanelActivity : AppCompatActivity() {
             }
             .create()
             .show()
+    }
+
+    private fun showSpotlightTour(role: String, bottomNav: BottomNavigationView) {
+        val views = mutableMapOf<String, View>()
+
+        // Common views
+        views["bottomNavCalendar"] = bottomNav.findViewById(R.id.nav_calendar)
+        views["bottomNavLocation"] = bottomNav.findViewById(R.id.nav_location)
+
+        // Get the current fragment
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
+        if (currentFragment is HomePanelFragment) {
+            val fragmentView = currentFragment.view
+            // Role-specific views
+            when (role) {
+                "student" -> {
+                    fragmentView?.findViewById<View>(R.id.subjectNotification)?.let { views["subjectNotification"] = it }
+                    fragmentView?.findViewById<View>(R.id.attendanceLog)?.let { views["attendanceLog"] = it }
+                }
+                "professor" -> {
+                    fragmentView?.findViewById<View>(R.id.subjectCard)?.let { views["scheduleSection"] = it }
+                }
+                "guardian" -> {
+                    fragmentView?.findViewById<View>(R.id.studentStatusContainer)?.let { views["studentStatusContainer"] = it }
+                }
+            }
+        }
+
+        SpotlightTourManager.startTour(this, role, views)
     }
 
     override fun onBackPressed() {

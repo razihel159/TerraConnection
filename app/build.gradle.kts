@@ -118,4 +118,7 @@ dependencies {
 
     // Image Cropping
     implementation(libs.ucrop)
+
+    implementation("com.github.takusemba:spotlight:2.0.3")
+    implementation("com.getkeepsafe.taptargetview:taptargetview:1.13.3")
 }
