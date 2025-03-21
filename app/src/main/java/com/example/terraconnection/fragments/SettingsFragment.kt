@@ -39,6 +39,7 @@ import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import com.example.terraconnection.databinding.FragmentSettingsBinding
+import androidx.activity.result.ActivityResultLauncher
 
 typealias Inflate<T> = (LayoutInflater, ViewGroup?, Boolean) -> T
 
@@ -47,21 +48,29 @@ class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
 
-    private val getContent = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { selectedImageUri ->
-            startCrop(selectedImageUri)
-        }
-    }
+    private lateinit var getContent: ActivityResultLauncher<String>
+    private lateinit var cropImage: ActivityResultLauncher<Intent>
 
-    private val cropImage = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == -1) { // RESULT_OK
-            val resultUri = UCrop.getOutput(result.data!!)
-            resultUri?.let { uri ->
-                uploadProfilePicture(uri)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        // Register activity result launchers
+        getContent = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let { selectedImageUri ->
+                startCrop(selectedImageUri)
             }
-        } else if (result.resultCode == UCrop.RESULT_ERROR) {
-            val cropError = UCrop.getError(result.data!!)
-            Toast.makeText(requireContext(), "Error cropping image: ${cropError?.message}", Toast.LENGTH_SHORT).show()
+        }
+
+        cropImage = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == -1) { // RESULT_OK
+                val resultUri = UCrop.getOutput(result.data!!)
+                resultUri?.let { uri ->
+                    uploadProfilePicture(uri)
+                }
+            } else if (result.resultCode == UCrop.RESULT_ERROR) {
+                val cropError = UCrop.getError(result.data!!)
+                Toast.makeText(requireContext(), "Error cropping image: ${cropError?.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -189,13 +198,25 @@ class SettingsFragment : Fragment() {
 
     private fun uploadProfilePicture(imageUri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
+            var inputStream: java.io.InputStream? = null
+            var outputStream: FileOutputStream? = null
+            var parcelFileDescriptor: android.os.ParcelFileDescriptor? = null
+            val file = File(requireContext().cacheDir, "profile_picture_${System.currentTimeMillis()}.jpg")
+            
             try {
                 // Convert Uri to File
-                val parcelFileDescriptor = requireContext().contentResolver.openFileDescriptor(imageUri, "r")
-                val inputStream = requireContext().contentResolver.openInputStream(imageUri)
-                val file = File(requireContext().cacheDir, "profile_picture_${System.currentTimeMillis()}.jpg")
-                val outputStream = FileOutputStream(file)
+                parcelFileDescriptor = requireContext().contentResolver.openFileDescriptor(imageUri, "r")
+                inputStream = requireContext().contentResolver.openInputStream(imageUri)
+                outputStream = FileOutputStream(file)
                 inputStream?.copyTo(outputStream)
+                
+                // Ensure streams are closed before proceeding with upload
+                inputStream?.close()
+                outputStream?.close()
+                parcelFileDescriptor?.close()
+                inputStream = null
+                outputStream = null
+                parcelFileDescriptor = null
 
                 // Create MultipartBody.Part
                 val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
@@ -235,14 +256,28 @@ class SettingsFragment : Fragment() {
                         Toast.makeText(requireContext(), "Failed to update profile picture", Toast.LENGTH_SHORT).show()
                     }
                 }
-
-                // Clean up
-                file.delete()
-                
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e("ProfilePicture", "Error uploading profile picture: ${e.message}")
                     Toast.makeText(requireContext(), "Error uploading profile picture", Toast.LENGTH_SHORT).show()
+                }
+            } finally {
+                // Ensure all resources are closed
+                try {
+                    inputStream?.close()
+                    outputStream?.close()
+                    parcelFileDescriptor?.close()
+                } catch (e: Exception) {
+                    Log.e("ProfilePicture", "Error closing resources: ${e.message}")
+                }
+                
+                // Clean up the temporary file
+                try {
+                    if (file.exists()) {
+                        file.delete()
+                    }
+                } catch (e: Exception) {
+                    Log.e("ProfilePicture", "Error deleting temporary file: ${e.message}")
                 }
             }
         }
