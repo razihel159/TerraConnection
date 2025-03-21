@@ -257,26 +257,84 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:visibility="gone">
+                    android:visibility="gone"
+                    android:layout_marginTop="8dp">
 
-                    <TextView
-                        android:id="@+id/tvLinkedStudentsTitle"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
                         android:layout_marginHorizontal="16dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginBottom="8dp"
-                        android:text="Linked Students"
-                        android:textColor="@color/violet"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:id="@+id/tvLinkedStudentsTitle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Linked Students"
+                            android:textColor="@color/violet"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Live Status"
+                            android:textColor="@color/violet"
+                            android:textSize="14sp"
+                            android:alpha="0.7"
+                            android:layout_marginStart="8dp"/>
+
+                    </LinearLayout>
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rvLinkedStudents"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:clipToPadding="false"
+                        android:paddingHorizontal="8dp"
                         android:paddingBottom="8dp" />
+
+                    <!-- Empty State for Linked Students -->
+                    <LinearLayout
+                        android:id="@+id/linkedStudentsEmptyState"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginTop="32dp"
+                        android:layout_marginBottom="32dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="160dp"
+                            android:layout_height="160dp"
+                            android:src="@drawable/ic_profile_placeholder"
+                            android:alpha="0.6"
+                            app:tint="@color/violet"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="24dp"
+                            android:text="No linked students found"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/violet"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:layout_marginHorizontal="32dp"
+                            android:text="Contact your school administrator to link your children's accounts"
+                            android:textSize="16sp"
+                            android:textColor="#757575"
+                            android:gravity="center"/>
+
+                    </LinearLayout>
 
                 </LinearLayout>
             </LinearLayout>

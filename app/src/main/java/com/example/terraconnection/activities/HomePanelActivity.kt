@@ -98,12 +98,11 @@ class HomePanelActivity : AppCompatActivity() {
     }
 
     private fun requestPermissions() {
-        val permissionsToRequest = requiredPermissions.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        val hasPermissions = requiredPermissions.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
-
-        if (permissionsToRequest.isNotEmpty()) {
-            permissionLauncher.launch(permissionsToRequest.toTypedArray())
+        if (!hasPermissions) {
+            permissionLauncher.launch(requiredPermissions)
         }
     }
 
@@ -138,5 +137,19 @@ class HomePanelActivity : AppCompatActivity() {
             }
             .create()
             .show()
+    }
+
+    override fun onBackPressed() {
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
+        if (currentFragment !is HomePanelFragment) {
+            // If not on home fragment, navigate to home
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, fragments[R.id.nav_home]!!)
+                .commit()
+            findViewById<BottomNavigationView>(R.id.bottomNavigation).selectedItemId = R.id.nav_home
+        } else {
+            // If on home fragment, perform default back behavior
+            super.onBackPressed()
+        }
     }
 }

@@ -258,14 +258,35 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                             .load(profilePicUrl)
                             .placeholder(R.drawable.default_profile)
                             .error(R.drawable.default_profile)
+                            .circleCrop()
+                            .into(binding.profileImage)
+                    } else {
+                        // Set default profile picture when no image is available
+                        Glide.with(requireContext())
+                            .load(R.drawable.default_profile)
+                            .circleCrop()
                             .into(binding.profileImage)
                     }
                 }
             } else {
                 Log.e("User Fetch", "Failed: ${response.message()}")
+                // Set default profile picture on error
+                withContext(Dispatchers.Main) {
+                    Glide.with(requireContext())
+                        .load(R.drawable.default_profile)
+                        .circleCrop()
+                        .into(binding.profileImage)
+                }
             }
         } catch (e: Exception) {
             Log.e("User Fetch", "Error: ${e.message}")
+            // Set default profile picture on error
+            withContext(Dispatchers.Main) {
+                Glide.with(requireContext())
+                    .load(R.drawable.default_profile)
+                    .circleCrop()
+                    .into(binding.profileImage)
+            }
         }
     }
 
@@ -381,43 +402,58 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
 
             val response = apiService.getLinkedStudents(token)
             if (response.isSuccessful) {
-                val linkedStudents = response.body()?.students
-                withContext(Dispatchers.Main) {
-                    if (linkedStudents.isNullOrEmpty()) {
-                        binding.studentStatusContainer.visibility = View.GONE
-                        Toast.makeText(
-                            requireContext(),
-                            "No linked students found",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        studentStatusAdapter.updateStudents(linkedStudents)
-                        binding.studentStatusContainer.visibility = View.VISIBLE
+                val linkedStudentsResponse = response.body()
+                if (linkedStudentsResponse != null) {
+                    Log.d("HomePanelFragment", "Linked students response: ${linkedStudentsResponse.students.size} students")
+                    
+                    // For each student, fetch their user details
+                    val studentsWithDetails = linkedStudentsResponse.students.map { student ->
+                        try {
+                            // Get child status which includes user details
+                            val childStatusResponse = apiService.getChildStatus(token, student.school_id)
+                            if (childStatusResponse.isSuccessful) {
+                                val childStatus = childStatusResponse.body()
+                                if (childStatus != null) {
+                                    // Get user details for the student
+                                    val userResponse = apiService.getMe(token)
+                                    if (userResponse.isSuccessful) {
+                                        val user = userResponse.body()
+                                        Log.d("HomePanelFragment", "User details for ${student.first_name}: $user")
+                                        student.copy(user = user)
+                                    } else {
+                                        Log.e("HomePanelFragment", "Failed to fetch user details for ${student.first_name}: ${userResponse.message()}")
+                                        student
+                                    }
+                                } else {
+                                    student
+                                }
+                            } else {
+                                Log.e("HomePanelFragment", "Failed to fetch child status for ${student.first_name}: ${childStatusResponse.message()}")
+                                student
+                            }
+                        } catch (e: Exception) {
+                            Log.e("HomePanelFragment", "Error fetching details for ${student.first_name}: ${e.message}")
+                            student
+                        }
+                    }
+                    
+                    withContext(Dispatchers.Main) {
+                        studentStatusAdapter.updateStudents(studentsWithDetails)
+                        if (studentsWithDetails.isEmpty()) {
+                            binding.linkedStudentsEmptyState.visibility = View.VISIBLE
+                            binding.rvLinkedStudents.visibility = View.GONE
+                        } else {
+                            binding.linkedStudentsEmptyState.visibility = View.GONE
+                            binding.rvLinkedStudents.visibility = View.VISIBLE
+                        }
                     }
                 }
             } else {
-                withContext(Dispatchers.Main) {
-                    binding.studentStatusContainer.visibility = View.GONE
-                    Toast.makeText(
-                        requireContext(),
-                        "Failed to fetch linked students: ${response.message()}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                Log.e("HomePanelFragment", "Failed to fetch linked students: ${response.message()}")
+                Log.e("HomePanelFragment", "Error body: ${response.errorBody()?.string()}")
             }
         } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                binding.studentStatusContainer.visibility = View.GONE
-                Toast.makeText(
-                    requireContext(),
-                    "Error: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        } finally {
-            withContext(Dispatchers.Main) {
-                binding.loadingIndicator.visibility = View.GONE
-            }
+            Log.e("HomePanelFragment", "Error fetching linked students: ${e.message}")
         }
     }
 

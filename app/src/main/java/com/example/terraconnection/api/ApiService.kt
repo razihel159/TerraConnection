@@ -114,7 +114,9 @@ data class StudentStatus(
     val school_id: String,
     val onCampus: Boolean,
     val lastLog: AttendanceLog?,
-    val lastGPS: GPSLocation?
+    val lastGPS: GPSLocation?,
+    val profile_picture: String?,
+    val user: User?
 )
 
 data class ChildStatusResponse(

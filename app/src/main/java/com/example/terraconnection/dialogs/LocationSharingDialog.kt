@@ -90,6 +90,8 @@ class LocationSharingDialog : DialogFragment() {
 
     private fun stopLocationSharing() {
         requireContext().stopService(Intent(requireContext(), LocationService::class.java))
+        LocationService.clearSharingState(requireContext())
+        dismiss()
     }
 
     private fun startClassLocationActivity() {

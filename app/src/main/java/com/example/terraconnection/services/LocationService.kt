@@ -53,7 +53,29 @@ class LocationService : Service() {
 
         fun isSharing(context: Context, classId: String): Boolean {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            return prefs.getString(KEY_ACTIVE_CLASS, null) == classId
+            val activeClassId = prefs.getString(KEY_ACTIVE_CLASS, null)
+            
+            // Check if service is actually running
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            val runningServices = activityManager.getRunningServices(Integer.MAX_VALUE)
+            val isServiceRunning = runningServices.any { 
+                it.service.className == LocationService::class.java.name 
+            }
+            
+            // If service is not running, clear the shared preferences
+            if (!isServiceRunning) {
+                clearSharingState(context)
+                return false
+            }
+            
+            return activeClassId == classId
+        }
+        
+        fun clearSharingState(context: Context) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .clear()
+                .apply()
         }
     }
 
