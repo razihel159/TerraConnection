@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="@drawable/bg_dialog_rounded">
 
     <TextView
         android:layout_width="match_parent"
@@ -20,17 +21,10 @@
         android:textSize="14sp"
         android:layout_marginBottom="16dp"/>
 
-    <TextView
-        android:id="@+id/tvCaptchaCode"
+    <com.example.terraconnection.views.CaptchaView
+        android:id="@+id/captchaView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:letterSpacing="0.25"
-        android:fontFamily="monospace"
-        android:background="@drawable/captcha_background"
-        android:padding="16dp"
+        android:layout_height="100dp"
         android:layout_marginBottom="24dp"/>
 
     <include

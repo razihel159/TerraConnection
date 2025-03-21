@@ -31,11 +31,14 @@ import kotlinx.coroutines.launch
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.example.terraconnection.utils.CodeInputHelper
+import com.example.terraconnection.views.CaptchaView
+import android.widget.ImageButton
 
 class LoginPageActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginPageBinding
     private val viewModel: LoginViewModel by viewModels()
     private var tempToken: String? = null
+    private var loadingDialog: AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -83,6 +86,7 @@ class LoginPageActivity : AppCompatActivity() {
         }
 
         viewModel.loginResult.observe(this, Observer { result ->
+            loadingDialog?.dismiss()
             result.onSuccess { response ->
                 if (response.otpRequired) {
                     tempToken = response.tempToken
@@ -109,10 +113,20 @@ class LoginPageActivity : AppCompatActivity() {
         })
     }
 
+    private fun showLoadingDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_loading, null)
+        loadingDialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+        loadingDialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        loadingDialog?.show()
+    }
+
     private fun showCaptchaDialog(username: String, password: String) {
-        val generatedCaptcha = generateCaptcha()
+        var currentCaptcha = generateCaptcha()
         val dialogView = layoutInflater.inflate(R.layout.dialog_captcha_verification, null)
-        val tvCaptchaCode = dialogView.findViewById<TextView>(R.id.tvCaptchaCode)
+        val captchaView = dialogView.findViewById<CaptchaView>(R.id.captchaView)
         val digits = listOf(
             dialogView.findViewById<EditText>(R.id.digit1),
             dialogView.findViewById<EditText>(R.id.digit2),
@@ -131,24 +145,27 @@ class LoginPageActivity : AppCompatActivity() {
         val btnVerifyCaptcha = dialogView.findViewById<MaterialButton>(R.id.btnVerifyCaptcha)
         val codeInputHelper = CodeInputHelper(digits)
 
-        tvCaptchaCode.text = generatedCaptcha
+        captchaView.setCaptchaText(currentCaptcha)
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
+            
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
         btnVerifyCaptcha.setOnClickListener {
             val userInput = codeInputHelper.getCode()
-            if (userInput == generatedCaptcha) {
+            if (userInput == currentCaptcha) {
                 dialog.dismiss()
+                showLoadingDialog()
                 viewModel.login(username, password)
             } else {
                 codeInputHelper.setError(true)
                 codeInputHelper.clearCode()
                 // Generate new CAPTCHA
-                val newCaptcha = generateCaptcha()
-                tvCaptchaCode.text = newCaptcha
+                currentCaptcha = generateCaptcha()
+                captchaView.setCaptchaText(currentCaptcha)
             }
         }
 
@@ -181,12 +198,23 @@ class LoginPageActivity : AppCompatActivity() {
         }
 
         val btnVerifyOtp = dialogView.findViewById<MaterialButton>(R.id.btnVerifyOtp)
+        val btnReturn = dialogView.findViewById<ImageButton>(R.id.btnReturn)
         val codeInputHelper = CodeInputHelper(digits)
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        btnReturn.setOnClickListener {
+            dialog.dismiss()
+            // Clear any stored temporary token
+            tempToken = null
+            // Clear the password field for security
+            binding.etPassword.text?.clear()
+        }
 
         btnVerifyOtp.setOnClickListener {
             val otp = codeInputHelper.getCode()
@@ -248,5 +276,11 @@ class LoginPageActivity : AppCompatActivity() {
                 Log.e("Firebase", "Error updating token after login: ${e.message}", e)
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        loadingDialog?.dismiss()
+        loadingDialog = null
     }
 }
