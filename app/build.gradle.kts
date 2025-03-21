@@ -100,8 +100,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
     // Add Firebase dependencies
-    implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
-    implementation("com.google.firebase:firebase-messaging")
+    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
+    implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("com.google.firebase:firebase-analytics")
 
     // Google Maps & Location

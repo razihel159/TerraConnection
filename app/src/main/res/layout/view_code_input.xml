@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:weightSum="6">
+
+    <EditText
+        android:id="@+id/digit1"
+        style="@style/CodeInputBox"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_margin="4dp"/>
+
+    <EditText
+        android:id="@+id/digit2"
+        style="@style/CodeInputBox"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_margin="4dp"/>
+
+    <EditText
+        android:id="@+id/digit3"
+        style="@style/CodeInputBox"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_margin="4dp"/>
+
+    <EditText
+        android:id="@+id/digit4"
+        style="@style/CodeInputBox"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_margin="4dp"/>
+
+    <EditText
+        android:id="@+id/digit5"
+        style="@style/CodeInputBox"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_margin="4dp"/>
+
+    <EditText
+        android:id="@+id/digit6"
+        style="@style/CodeInputBox"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_margin="4dp"/>
+
+</LinearLayout> 

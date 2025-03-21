@@ -16,6 +16,9 @@ import com.example.terraconnection.data.MessageResponse
 import com.example.terraconnection.data.NotificationsResponse
 import com.example.terraconnection.data.AttendanceLog
 import com.example.terraconnection.data.GPSLocation
+import com.example.terraconnection.data.OtpResponse
+import com.example.terraconnection.data.OtpVerificationRequest
+import com.example.terraconnection.data.OtpVerificationResponse
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -31,6 +34,9 @@ import retrofit2.http.Path
 interface ApiService {
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+
+    @POST("api/auth/verify-otp")
+    suspend fun verifyOtp(@Body request: OtpVerificationRequest): Response<OtpVerificationResponse>
 
     @GET("api/auth/me")
     suspend fun getMe(@Header("Authorization") token: String): Response<User>

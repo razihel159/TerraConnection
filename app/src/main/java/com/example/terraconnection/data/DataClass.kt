@@ -1,17 +1,10 @@
 package com.example.terraconnection.data
 import kotlinx.parcelize.Parcelize
-
 import android.os.Parcelable
 
 data class LoginRequest(
     val email: String,
     val password: String
-)
-
-data class LoginResponse(
-    val token: String,
-    val message: String,
-    val role: String
 )
 
 data class User(
