@@ -13,6 +13,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.terraconnection.fragments.MapsFragment
+import com.example.terraconnection.fragments.LocationSettingsFragment
 import com.example.terraconnection.R
 import com.example.terraconnection.ThemeManager
 import com.example.terraconnection.SessionManager
@@ -75,7 +76,24 @@ class HomePanelActivity : AppCompatActivity() {
             else -> CalendarStudFragment()
         }
         fragments[R.id.nav_profile] = SettingsFragment()
-        fragments[R.id.nav_location] = MapsFragment()
+        
+        // Different location fragments based on role
+        when (role) {
+            "student" -> {
+                // Students get dual toggle interface
+                fragments[R.id.nav_location] = LocationSettingsFragment()
+            }
+            "professor" -> {
+                // Professors get class list to view student locations
+                fragments[R.id.nav_location] = MapsFragment()
+            }
+            // Guardians get no location tab (handled below)
+        }
+        
+        // Hide location tab for guardians
+        if (role == "guardian") {
+            bottomNav.menu.findItem(R.id.nav_location).isVisible = false
+        }
 
         // Set initial fragment
         supportFragmentManager.beginTransaction()

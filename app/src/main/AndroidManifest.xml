@@ -18,6 +18,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/ic_logo"
         android:label="@string/app_name"
+        android:usesCleartextTraffic="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.TerraConnection"
         android:enableOnBackInvokedCallback="true"
@@ -73,6 +74,11 @@
 
         <service
             android:name=".services.LocationService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <service
+            android:name=".services.GlobalLocationService"
             android:exported="false"
             android:foregroundServiceType="location" />
 

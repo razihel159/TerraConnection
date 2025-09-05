@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import com.example.terraconnection.R
 import com.example.terraconnection.SessionManager
 import com.example.terraconnection.activities.HomePanelActivity
+import com.example.terraconnection.utils.LocationFormatter
 import com.google.android.gms.location.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -175,21 +176,31 @@ class LocationService : Service() {
                     return@launch
                 }
 
+                // Convert GPS coordinates to general area name for privacy
+                val generalArea = LocationFormatter.getGeneralAreaName(
+                    this@LocationService.applicationContext,
+                    location.latitude,
+                    location.longitude
+                ) ?: "Unknown Area"
+
+                android.util.Log.d("LocationService", "Converted location to general area: $generalArea")
+
                 val json = JSONObject().apply {
+                    put("generalArea", generalArea)
+                    put("classId", classId)
+                    put("timestamp", System.currentTimeMillis())
+                    // Still include coordinates for backend processing but they won't be displayed
                     put("latitude", location.latitude)
                     put("longitude", location.longitude)
-                    put("classId", classId)
                 }
 
-                android.util.Log.d("LocationService", "Sending location update: $json")
+                android.util.Log.d("LocationService", "Sending location update with general area: $generalArea")
 
                 val request = Request.Builder()
                     .url("https://terraconnection.online/api/location/update")
                     .addHeader("Authorization", "Bearer $token")
                     .post(json.toString().toRequestBody("application/json".toMediaType()))
                     .build()
-
-                android.util.Log.d("LocationService", "Request headers: ${request.headers}")
 
                 client.newCall(request).enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {

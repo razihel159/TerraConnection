@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import com.example.terraconnection.R
+import com.example.terraconnection.SessionManager
 import com.example.terraconnection.activities.ClassLocationActivity
 import com.example.terraconnection.services.LocationService
 
@@ -50,10 +51,25 @@ class LocationSharingDialog : DialogFragment() {
             val stopSharingButton = view.findViewById<Button>(R.id.stopSharingButton)
 
             titleText.text = className
-            messageText.text = if (isLocationServiceRunning) {
-                "You are currently sharing your location with this class"
+            
+            val role = SessionManager.getRole(activity)
+            
+            if (role == "professor") {
+                // For professors, focus on viewing student locations
+                messageText.text = "View student locations in this class"
+                startSharingButton.visibility = android.view.View.GONE
+                stopSharingButton.visibility = android.view.View.GONE
             } else {
-                "Would you like to share your location with this class?"
+                // For students, show sharing options
+                messageText.text = if (isLocationServiceRunning) {
+                    "You are currently sharing your location with this class"
+                } else {
+                    "Would you like to share your location with this class?"
+                }
+                
+                // Show/hide buttons based on current state
+                startSharingButton.visibility = if (isLocationServiceRunning) android.view.View.GONE else android.view.View.VISIBLE
+                stopSharingButton.visibility = if (isLocationServiceRunning) android.view.View.VISIBLE else android.view.View.GONE
             }
 
             startSharingButton.setOnClickListener {
@@ -70,10 +86,6 @@ class LocationSharingDialog : DialogFragment() {
                 stopLocationSharing()
                 dismiss()
             }
-
-            // Show/hide buttons based on current state
-            startSharingButton.visibility = if (isLocationServiceRunning) android.view.View.GONE else android.view.View.VISIBLE
-            stopSharingButton.visibility = if (isLocationServiceRunning) android.view.View.VISIBLE else android.view.View.GONE
 
             builder.setView(view)
             builder.create()

@@ -1,5 +1,6 @@
 package com.example.terraconnection.adapters
 
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -10,6 +11,13 @@ import com.example.terraconnection.databinding.ItemStudentStatusBinding
 import com.example.terraconnection.api.RetrofitClient
 import com.bumptech.glide.Glide
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.core.view.isVisible
+import com.example.terraconnection.utils.LocationFormatter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 class StudentStatusAdapter : RecyclerView.Adapter<StudentStatusAdapter.StudentStatusViewHolder>() {
     private var students: List<StudentStatus> = listOf()
@@ -21,8 +29,11 @@ class StudentStatusAdapter : RecyclerView.Adapter<StudentStatusAdapter.StudentSt
 
     inner class StudentStatusViewHolder(private val binding: ItemStudentStatusBinding) :
         RecyclerView.ViewHolder(binding.root) {
+        private var bindJob: Job? = null
         
+        @RequiresApi(Build.VERSION_CODES.O)
         fun bind(student: StudentStatus) {
+            bindJob?.cancel()
             with(binding) {
                 Log.d("StudentStatusAdapter", "Binding student: ${student.first_name} ${student.last_name}")
                 Log.d("StudentStatusAdapter", "Student profile picture: ${student.profile_picture}")
@@ -70,6 +81,52 @@ class StudentStatusAdapter : RecyclerView.Adapter<StudentStatusAdapter.StudentSt
                         .circleCrop()
                         .into(studentProfilePic)
                 }
+
+                // Default location placeholders
+                studentLocationText.text = "Location unavailable"
+                studentLocationUpdatedText.isVisible = false
+
+                val lastGps = student.lastGPS
+                if (lastGps != null) {
+                    // Parse timestamp to epoch millis (expected ISO format)
+                    val timeMillis = try {
+                        java.time.Instant.parse(lastGps.timestamp).toEpochMilli()
+                    } catch (e: Exception) {
+                        Log.w("StudentStatusAdapter", "Failed to parse GPS timestamp: ${lastGps.timestamp}")
+                        null
+                    }
+
+                    val isRecent = timeMillis?.let { LocationFormatter.isRecent(it) } == true
+                    studentLocationText.alpha = if (isRecent) 1f else 0.75f
+
+                    // Show loading while resolving area
+                    studentLocationText.text = if (isRecent) "Determining area…" else "Resolving last area…"
+                    studentLocationUpdatedText.isVisible = timeMillis != null
+                    if (timeMillis != null) {
+                        studentLocationUpdatedText.text = if (isRecent) {
+                            "Updated ${LocationFormatter.formatRelative(timeMillis)}"
+                        } else {
+                            "Last seen ${LocationFormatter.formatRelative(timeMillis)}"
+                        }
+                    }
+
+                    val lat = lastGps.latitude
+                    val lon = lastGps.longitude
+                    val context = root.context.applicationContext
+
+                    bindJob = CoroutineScope(Dispatchers.Main).launch {
+                        val area = LocationFormatter.getGeneralAreaName(context, lat, lon)
+                        val text = when {
+                            area.isNullOrBlank() -> "Location unavailable"
+                            isRecent -> "Location: $area"
+                            else -> "Last seen near $area"
+                        }
+                        // Guard recycled holder
+                        if (adapterPosition != RecyclerView.NO_POSITION) {
+                            studentLocationText.text = text
+                        }
+                    }
+                }
             }
         }
     }
@@ -83,6 +140,7 @@ class StudentStatusAdapter : RecyclerView.Adapter<StudentStatusAdapter.StudentSt
         return StudentStatusViewHolder(binding)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: StudentStatusViewHolder, position: Int) {
         holder.bind(students[position])
     }

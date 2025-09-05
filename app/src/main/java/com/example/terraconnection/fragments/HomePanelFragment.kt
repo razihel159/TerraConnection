@@ -397,6 +397,10 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
 
     private suspend fun fetchLinkedStudents() {
         try {
+            // Check if guardian has enabled location viewing
+            val prefs = requireContext().getSharedPreferences("GuardianLocationPrefs", Context.MODE_PRIVATE)
+            val isLocationViewingEnabled = prefs.getBoolean("location_viewing_enabled", true)
+            
             val token = SessionManager.getToken(requireContext())?.let { "Bearer $it" }
                 ?: throw Exception("No authentication token found")
 
@@ -419,7 +423,14 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                                     if (userResponse.isSuccessful) {
                                         val user = userResponse.body()
                                         Log.d("HomePanelFragment", "User details for ${student.first_name}: $user")
-                                        student.copy(user = user)
+                                        
+                                        // If location viewing is disabled, remove location data
+                                        val studentWithDetails = student.copy(user = user)
+                                        if (!isLocationViewingEnabled) {
+                                            studentWithDetails.copy(lastGPS = null)
+                                        } else {
+                                            studentWithDetails
+                                        }
                                     } else {
                                         Log.e("HomePanelFragment", "Failed to fetch user details for ${student.first_name}: ${userResponse.message()}")
                                         student

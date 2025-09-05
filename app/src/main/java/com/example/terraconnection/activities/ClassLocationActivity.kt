@@ -1,39 +1,24 @@
 package com.example.terraconnection.activities
 
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.LayoutInflater
-import android.view.View
-import android.widget.ImageView
+import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.bumptech.glide.Glide
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.terraconnection.R
 import com.example.terraconnection.SessionManager
-import com.example.terraconnection.services.LocationService
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.example.terraconnection.adapters.StudentLocationAdapter
+import com.example.terraconnection.adapters.StudentLocationInfo
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
-    private lateinit var map: GoogleMap
+class ClassLocationActivity : AppCompatActivity() {
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
@@ -44,7 +29,12 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
     private var classId: String = ""
     private var isReconnecting = false
     private val reconnectHandler = Handler(Looper.getMainLooper())
-    private val markers = mutableMapOf<String, Marker?>()
+    private lateinit var adapter: StudentLocationAdapter
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var activeUsersCount: TextView
+    private lateinit var connectionStatus: TextView
+    private lateinit var emptyState: android.view.View
+    private val studentLocations = mutableMapOf<String, StudentLocationInfo>()
     private val reconnectRunnable = object : Runnable {
         override fun run() {
             if (!isFinishing) {
@@ -55,7 +45,6 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     companion object {
-        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         private const val WEBSOCKET_URL = "wss://terraconnection.online/ws"
         private const val BASE_URL = "https://terraconnection.online"
     }
@@ -66,31 +55,28 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
 
         classId = intent.getStringExtra("classId") ?: return
 
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
-
-        checkLocationPermission()
+        initializeViews()
+        setupRecyclerView()
         setupWebSocket()
         fetchInitialLocations()
     }
 
-    private fun checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE
-            )
+    private fun initializeViews() {
+        activeUsersCount = findViewById(R.id.activeUsersCount)
+        connectionStatus = findViewById(R.id.connectionStatus)
+        recyclerView = findViewById(R.id.studentsRecyclerView)
+        emptyState = findViewById(R.id.emptyState)
+        
+        // Setup back button
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
+            finish()
         }
     }
 
-    private fun startLocationService() {
-        // Removed as we don't want to start/stop the service from this activity
+    private fun setupRecyclerView() {
+        adapter = StudentLocationAdapter()
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = adapter
     }
 
     private fun setupWebSocket() {
@@ -108,6 +94,10 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
                 isReconnecting = false
                 reconnectHandler.removeCallbacks(reconnectRunnable)
                 
+                runOnUiThread {
+                    connectionStatus.text = "Connected"
+                }
+                
                 webSocket.send(JSONObject().apply {
                     put("type", "join-class")
                     put("classId", classId)
@@ -120,17 +110,23 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
                     runOnUiThread {
                         when (json.getString("type")) {
                             "location-update" -> {
-                                updateStudentMarker(
+                                updateStudentLocation(
                                     json.getString("studentId"),
                                     json.getString("studentName"),
-                                    json.getDouble("latitude"),
-                                    json.getDouble("longitude"),
+                                    json.optString("generalArea"),
+                                    json.optDouble("latitude"),
+                                    json.optDouble("longitude"),
                                     json.optString("profilePicture"),
-                                    json.getString("role")
+                                    json.getString("role"),
+                                    json.optString("timestamp")
                                 )
                             }
                             "stop-sharing" -> {
-                                removeStudentMarker(json.getString("studentId"))
+                                removeStudentLocation(json.getString("studentId"))
+                            }
+                            "activeUsers" -> {
+                                val count = json.getInt("count")
+                                activeUsersCount.text = count.toString()
                             }
                         }
                     }
@@ -142,6 +138,7 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 t.printStackTrace()
                 runOnUiThread {
+                    connectionStatus.text = "Disconnected"
                     if (!isReconnecting) {
                         isReconnecting = true
                         Toast.makeText(
@@ -155,6 +152,9 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                runOnUiThread {
+                    connectionStatus.text = "Disconnected"
+                }
                 if (!isFinishing) {
                     isReconnecting = true
                     reconnectHandler.postDelayed(reconnectRunnable, 1000)
@@ -200,9 +200,8 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
 
                         val locations = json.getJSONArray("data")
                         runOnUiThread {
-                            // Clear existing markers first
-                            markers.values.forEach { it?.remove() }
-                            markers.clear()
+                            // Clear existing locations first
+                            studentLocations.clear()
                             
                             val currentTimeMillis = System.currentTimeMillis()
                             for (i in 0 until locations.length()) {
@@ -215,19 +214,23 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
                                     val timestamp = location.getString("timestamp")
                                     val locationTime = java.time.Instant.parse(timestamp).toEpochMilli()
                                     
-                                    // Only show markers for locations updated in the last minute
+                                    // Only show locations updated in the last minute
                                     if (currentTimeMillis - locationTime <= 1 * 60 * 1000) {
-                                        updateStudentMarker(
+                                        updateStudentLocation(
                                             location.getString("studentId"),
                                             location.getString("studentName"),
+                                            location.optString("generalArea"),
                                             location.getDouble("latitude"),
                                             location.getDouble("longitude"),
                                             location.optString("profilePicture"),
-                                            location.getString("role")
+                                            location.getString("role"),
+                                            timestamp
                                         )
                                     }
                                 }
                             }
+                            
+                            updateUI()
                         }
                     } catch (e: Exception) {
                         runOnUiThread {
@@ -243,96 +246,60 @@ class ClassLocationActivity : AppCompatActivity(), OnMapReadyCallback {
         })
     }
 
-    private fun createCustomMarker(profilePictureUrl: String?, isProf: Boolean): Bitmap {
-        val markerView = LayoutInflater.from(this).inflate(R.layout.custom_marker, null)
-        val profileImageView = markerView.findViewById<ImageView>(R.id.profile_picture)
-        val markerBackground = markerView.findViewById<ImageView>(R.id.marker_background)
-
-        // Set different background for professors
-        markerBackground.setImageResource(
-            if (isProf) R.drawable.marker_background_professor
-            else R.drawable.marker_background
-        )
-
-        if (!profilePictureUrl.isNullOrEmpty()) {
-            Glide.with(this)
-                .load("$BASE_URL$profilePictureUrl")
-                .placeholder(R.drawable.default_avatar)
-                .error(R.drawable.default_avatar)
-                .circleCrop()
-                .into(profileImageView)
-        }
-
-        val width = resources.getDimensionPixelSize(R.dimen.marker_width)
-        val height = resources.getDimensionPixelSize(R.dimen.marker_height)
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        markerView.measure(width, height)
-        markerView.layout(0, 0, width, height)
-        markerView.draw(canvas)
-        return bitmap
-    }
-
-    private fun updateStudentMarker(
+    private fun updateStudentLocation(
         studentId: String,
         studentName: String,
-        latitude: Double,
-        longitude: Double,
+        generalArea: String?,
+        latitude: Double?,
+        longitude: Double?,
         profilePictureUrl: String?,
-        role: String = "student" // Default to student if role not provided
+        role: String = "student",
+        timestamp: String?
     ) {
-        val position = LatLng(latitude, longitude)
-        val markerOptions = MarkerOptions()
-            .position(position)
-            .title(studentName)
-            .icon(BitmapDescriptorFactory.fromBitmap(createCustomMarker(profilePictureUrl, role == "professor")))
-
-        markers[studentId]?.remove()
-        markers[studentId] = map.addMarker(markerOptions)
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 15f))
+        val locationInfo = StudentLocationInfo(
+            studentId = studentId,
+            studentName = studentName,
+            profilePicture = profilePictureUrl,
+            role = role,
+            generalArea = generalArea,
+            latitude = latitude,
+            longitude = longitude,
+            timestamp = timestamp
+        )
+        
+        studentLocations[studentId] = locationInfo
+        updateUI()
     }
 
-    private fun removeStudentMarker(studentId: String) {
-        markers[studentId]?.remove()
-        markers.remove(studentId)
+    private fun removeStudentLocation(studentId: String) {
+        studentLocations.remove(studentId)
+        updateUI()
     }
 
-    override fun onMapReady(googleMap: GoogleMap) {
-        map = googleMap
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            map.isMyLocationEnabled = true
+    private fun updateUI() {
+        val locationsList = studentLocations.values.toList()
+        adapter.submitList(locationsList)
+        
+        // Update empty state
+        if (locationsList.isEmpty()) {
+            recyclerView.visibility = android.view.View.GONE
+            emptyState.visibility = android.view.View.VISIBLE
+        } else {
+            recyclerView.visibility = android.view.View.VISIBLE
+            emptyState.visibility = android.view.View.GONE
         }
+        
+        // Update active users count
+        activeUsersCount.text = locationsList.size.toString()
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (::map.isInitialized) {
-                    map.isMyLocationEnabled = true
-                }
-            } else {
-                Toast.makeText(
-                    this,
-                    "Location permission is required for this feature",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
+    private fun updateConnectionStatus(status: String) {
+        connectionStatus.text = status
     }
 
     override fun onDestroy() {
         super.onDestroy()
         webSocket?.close(1000, "Activity destroyed")
         reconnectHandler.removeCallbacks(reconnectRunnable)
-        // Removed stopService call as we don't want to stop the location service
     }
 } 

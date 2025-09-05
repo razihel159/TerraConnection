@@ -17,6 +17,7 @@ import com.example.terraconnection.adapters.ClassListAdapter
 import com.example.terraconnection.api.RetrofitClient
 import com.example.terraconnection.dialogs.LocationSharingDialog
 import com.example.terraconnection.models.ClassItem
+import com.example.terraconnection.utils.LocationFormatter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
