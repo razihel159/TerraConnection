@@ -44,12 +44,17 @@ object LocationFormatter {
                 val geocoder = Geocoder(context, Locale.getDefault())
                 val addresses = geocoder.getFromLocation(latitude, longitude, 1)
                 val address = addresses?.firstOrNull()
-                val area = listOfNotNull(
-                    address?.subLocality,
-                    address?.locality,
-                    address?.adminArea,
-                    address?.countryName
-                ).firstOrNull()
+                // Prefer city + province/state format
+                val city = address?.locality
+                val province = address?.adminArea
+                val area = when {
+                    city != null && province != null -> "$city, $province"
+                    city != null -> city
+                    province != null -> province
+                    address?.subLocality != null -> address.subLocality
+                    address?.countryName != null -> address.countryName
+                    else -> null
+                }
                 synchronized(cache) { cache[cacheKey] = CacheEntry(area, now) }
                 area
             } catch (e: Exception) {
@@ -70,6 +75,12 @@ object LocationFormatter {
             DateUtils.MINUTE_IN_MILLIS,
             DateUtils.FORMAT_ABBREV_RELATIVE
         )
+    }
+    
+    fun clearCache() {
+        synchronized(cache) {
+            cache.clear()
+        }
     }
 }
 

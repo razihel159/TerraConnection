@@ -397,9 +397,8 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
 
     private suspend fun fetchLinkedStudents() {
         try {
-            // Check if guardian has enabled location viewing
-            val prefs = requireContext().getSharedPreferences("GuardianLocationPrefs", Context.MODE_PRIVATE)
-            val isLocationViewingEnabled = prefs.getBoolean("location_viewing_enabled", true)
+            // Always show location data for now (guardian location viewing is always enabled)
+            val isLocationViewingEnabled = true
             
             val token = SessionManager.getToken(requireContext())?.let { "Bearer $it" }
                 ?: throw Exception("No authentication token found")
