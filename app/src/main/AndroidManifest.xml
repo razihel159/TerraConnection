@@ -55,6 +55,9 @@
             android:name=".activities.MainActivity"
             android:exported="false" />
         <activity
+            android:name=".activities.ForgotPasswordActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.LoginPageActivity"
             android:exported="true"
             android:theme="@style/Theme.App.SplashScreen">

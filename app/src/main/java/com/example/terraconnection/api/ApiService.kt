@@ -19,6 +19,11 @@ import com.example.terraconnection.data.GPSLocation
 import com.example.terraconnection.data.OtpResponse
 import com.example.terraconnection.data.OtpVerificationRequest
 import com.example.terraconnection.data.OtpVerificationResponse
+import com.example.terraconnection.data.ForgotPasswordRequest
+import com.example.terraconnection.data.ForgotPasswordRequestResponse
+import com.example.terraconnection.data.ForgotPasswordVerifyRequest
+import com.example.terraconnection.data.ForgotPasswordVerifyResponse
+import com.example.terraconnection.data.ForgotPasswordResetRequest
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -37,6 +42,15 @@ interface ApiService {
 
     @POST("api/auth/verify-otp")
     suspend fun verifyOtp(@Body request: OtpVerificationRequest): Response<OtpVerificationResponse>
+
+    @POST("api/auth/forgot-password/request")
+    suspend fun requestPasswordReset(@Body request: ForgotPasswordRequest): Response<ForgotPasswordRequestResponse>
+
+    @POST("api/auth/forgot-password/verify")
+    suspend fun verifyPasswordReset(@Body request: ForgotPasswordVerifyRequest): Response<ForgotPasswordVerifyResponse>
+
+    @POST("api/auth/forgot-password/reset")
+    suspend fun completePasswordReset(@Body request: ForgotPasswordResetRequest): Response<MessageResponse>
 
     @GET("api/auth/me")
     suspend fun getMe(@Header("Authorization") token: String): Response<User>
