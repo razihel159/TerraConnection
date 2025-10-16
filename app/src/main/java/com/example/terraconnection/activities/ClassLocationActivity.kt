@@ -45,8 +45,8 @@ class ClassLocationActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val WEBSOCKET_URL = "ws://10.0.2.2:3000/ws"
-        private const val BASE_URL = "http://10.0.2.2:3000"
+        private const val WEBSOCKET_URL = "ws://terraconnection-production.up.railway.app/ws"
+        private const val BASE_URL = "https://terraconnection-production.up.railway.app"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

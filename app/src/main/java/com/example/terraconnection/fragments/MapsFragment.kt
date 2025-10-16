@@ -103,7 +103,7 @@ class MapsFragment : Fragment() {
             .build()
             
         val request = Request.Builder()
-            .url("ws://10.0.2.2:3000/ws")
+            .url("ws://terraconnection-production.up.railway.app/ws")
             .addHeader("Authorization", "Bearer $token")
             .build()
 

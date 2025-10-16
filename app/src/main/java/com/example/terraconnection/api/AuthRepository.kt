@@ -13,6 +13,7 @@ import com.example.terraconnection.data.OtpVerificationRequest
 import com.example.terraconnection.data.OtpVerificationResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 class AuthRepository {
     val api = RetrofitClient.apiService
@@ -64,7 +65,7 @@ class AuthRepository {
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Log.e("ForgotPassword", "Reset request failed: $errorBody")
-                    Result.failure(Exception(errorBody ?: "Unable to request password reset"))
+                    Result.failure(Exception(extractErrorMessage(errorBody)))
                 }
             } catch (e: Exception) {
                 Log.e("ForgotPassword", "Reset request exception", e)
@@ -87,7 +88,7 @@ class AuthRepository {
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Log.e("ForgotPassword", "OTP verification failed: $errorBody")
-                    Result.failure(Exception(errorBody ?: "Invalid or expired code"))
+                    Result.failure(Exception(extractErrorMessage(errorBody, "Invalid or expired code")))
                 }
             } catch (e: Exception) {
                 Log.e("ForgotPassword", "OTP verification exception", e)
@@ -115,11 +116,22 @@ class AuthRepository {
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Log.e("ForgotPassword", "Password reset failed: $errorBody")
-                    Result.failure(Exception(errorBody ?: "Unable to reset password"))
+                    Result.failure(Exception(extractErrorMessage(errorBody, "Unable to reset password")))
                 }
             } catch (e: Exception) {
                 Log.e("ForgotPassword", "Password reset exception", e)
                 Result.failure(e)
+            }
+        }
+    }
+
+    companion object {
+        private fun extractErrorMessage(raw: String?, fallback: String = "Unable to request password reset"): String {
+            if (raw.isNullOrBlank()) return fallback
+            return try {
+                JSONObject(raw).optString("error").takeIf { it.isNotBlank() } ?: raw
+            } catch (ex: Exception) {
+                raw
             }
         }
     }

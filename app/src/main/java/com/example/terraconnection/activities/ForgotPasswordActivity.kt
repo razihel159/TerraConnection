@@ -10,6 +10,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.core.widget.doOnTextChanged
+import com.example.terraconnection.R
 import com.example.terraconnection.ThemeManager
 import com.example.terraconnection.api.ForgotPasswordViewModel
 import com.example.terraconnection.databinding.ActivityForgotPasswordBinding
@@ -49,7 +51,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
             binding.tilEmail.error = null
             val email = binding.etEmail.text?.toString()?.trim().orEmpty()
             if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                binding.tilEmail.error = getString(com.example.terraconnection.R.string.forgot_password_invalid_email)
+                binding.tilEmail.error = getString(R.string.forgot_password_invalid_email)
                 return@setOnClickListener
             }
             currentEmail = email
@@ -59,14 +61,20 @@ class ForgotPasswordActivity : AppCompatActivity() {
             viewModel.requestPasswordReset(email)
         }
 
+        binding.etEmail.doOnTextChanged { _, _, _, _ ->
+            if (binding.tilEmail.error != null) {
+                binding.tilEmail.error = null
+            }
+        }
+
         binding.btnVerifyCode.setOnClickListener {
             val email = currentEmail ?: run {
-                Toast.makeText(this, com.example.terraconnection.R.string.forgot_password_invalid_email, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.forgot_password_invalid_email, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             val otp = binding.etOtp.text?.toString()?.trim().orEmpty()
             if (otp.length != 6) {
-                binding.tilOtp.error = getString(com.example.terraconnection.R.string.forgot_password_invalid_code)
+                binding.tilOtp.error = getString(R.string.forgot_password_invalid_code)
                 return@setOnClickListener
             }
             binding.tilOtp.error = null
@@ -75,12 +83,12 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
         binding.btnResetPassword.setOnClickListener {
             val email = currentEmail ?: run {
-                Toast.makeText(this, com.example.terraconnection.R.string.forgot_password_invalid_email, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.forgot_password_invalid_email, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             val token = resetToken ?: run {
-                Toast.makeText(this, getString(com.example.terraconnection.R.string.forgot_password_invalid_code), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.forgot_password_invalid_code), Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -88,13 +96,13 @@ class ForgotPasswordActivity : AppCompatActivity() {
             val confirmPassword = binding.etConfirmPassword.text?.toString()?.trim().orEmpty()
 
             if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
-                binding.tilNewPassword.error = getString(com.example.terraconnection.R.string.forgot_password_new_password_hint)
-                binding.tilConfirmPassword.error = getString(com.example.terraconnection.R.string.forgot_password_confirm_password_hint)
+                binding.tilNewPassword.error = getString(R.string.forgot_password_new_password_hint)
+                binding.tilConfirmPassword.error = getString(R.string.forgot_password_confirm_password_hint)
                 return@setOnClickListener
             }
 
             if (newPassword != confirmPassword) {
-                binding.tilConfirmPassword.error = getString(com.example.terraconnection.R.string.forgot_password_password_mismatch)
+                binding.tilConfirmPassword.error = getString(R.string.forgot_password_password_mismatch)
                 return@setOnClickListener
             }
 
@@ -109,6 +117,10 @@ class ForgotPasswordActivity : AppCompatActivity() {
             val email = currentEmail ?: return@setOnClickListener
             viewModel.requestPasswordReset(email)
         }
+
+        binding.btnBackToLogin.setOnClickListener {
+            finish()
+        }
     }
 
     private fun observeViewModel() {
@@ -122,9 +134,10 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
         viewModel.resetRequestState.observe(this) { result ->
             result.onSuccess { response ->
+                binding.tilEmail.error = null
                 binding.stepVerificationContainer.visibility = View.VISIBLE
                 binding.tvEmailMasked.text = response.emailMasked?.let {
-                    getString(com.example.terraconnection.R.string.forgot_password_code_sent_masked, it)
+                    getString(R.string.forgot_password_code_sent_masked, it)
                 } ?: currentEmail
                 binding.passwordFieldsContainer.visibility = View.GONE
                 resetToken = null
@@ -134,15 +147,22 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 startOtpCountdown(response.expiresAt)
                 Toast.makeText(
                     this,
-                    response.message ?: getString(com.example.terraconnection.R.string.forgot_password_send_code),
+                    response.message ?: getString(R.string.forgot_password_send_code),
                     Toast.LENGTH_SHORT
                 ).show()
             }.onFailure { error ->
-                Toast.makeText(
-                    this,
-                    error.message ?: getString(com.example.terraconnection.R.string.forgot_password_invalid_email),
-                    Toast.LENGTH_LONG
-                ).show()
+                val message = error.message ?: getString(R.string.forgot_password_invalid_email)
+                if (message.contains("account does not exist", ignoreCase = true)) {
+                    binding.stepVerificationContainer.visibility = View.GONE
+                    binding.tilEmail.error = getString(R.string.forgot_password_account_not_found)
+                } else {
+                    binding.tilEmail.error = null
+                    Toast.makeText(
+                        this,
+                        message,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
 
@@ -154,12 +174,12 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 binding.tilOtp.error = null
                 Toast.makeText(
                     this,
-                    getString(com.example.terraconnection.R.string.forgot_password_verify_success),
+                    getString(R.string.forgot_password_verify_success),
                     Toast.LENGTH_SHORT
                 ).show()
                 response.expiresAt?.let { startOtpCountdown(it) }
             }.onFailure { error ->
-                binding.tilOtp.error = error.message ?: getString(com.example.terraconnection.R.string.forgot_password_invalid_code)
+                binding.tilOtp.error = error.message ?: getString(R.string.forgot_password_invalid_code)
             }
         }
 
@@ -167,7 +187,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
             result.onSuccess { response ->
                 Toast.makeText(
                     this,
-                    response.message ?: getString(com.example.terraconnection.R.string.forgot_password_reset_success),
+                    response.message ?: getString(R.string.forgot_password_reset_success),
                     Toast.LENGTH_LONG
                 ).show()
                 finish()
@@ -182,7 +202,7 @@ class ForgotPasswordActivity : AppCompatActivity() {
         countDownTimer?.cancel()
 
         if (millisRemaining <= 0L) {
-            binding.tvCountdown.text = getString(com.example.terraconnection.R.string.forgot_password_code_expired)
+            binding.tvCountdown.text = getString(R.string.forgot_password_code_expired)
             setResendEnabled(true)
             return
         }
@@ -195,14 +215,14 @@ class ForgotPasswordActivity : AppCompatActivity() {
                 val minutes = (totalSeconds / 60).toInt()
                 val seconds = (totalSeconds % 60).toInt()
                 binding.tvCountdown.text = getString(
-                    com.example.terraconnection.R.string.forgot_password_code_expires_in,
+                    R.string.forgot_password_code_expires_in,
                     minutes,
                     seconds
                 )
             }
 
             override fun onFinish() {
-                binding.tvCountdown.text = getString(com.example.terraconnection.R.string.forgot_password_code_expired)
+                binding.tvCountdown.text = getString(R.string.forgot_password_code_expired)
                 setResendEnabled(true)
                 resetToken = null
                 binding.btnVerifyCode.isEnabled = true

@@ -197,7 +197,7 @@ class LocationService : Service() {
                 android.util.Log.d("LocationService", "Sending location update with general area: $generalArea")
 
                 val request = Request.Builder()
-                        .url("http://10.0.2.2:3000/api/location/update")
+                        .url("https://terraconnection-production.up.railway.app/api/location/update")
                     .addHeader("Authorization", "Bearer $token")
                     .post(json.toString().toRequestBody("application/json".toMediaType()))
                     .build()
