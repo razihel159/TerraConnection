@@ -65,4 +65,6 @@
     <string name="forgot_password_code_expired">Verification code expired. Request a new one.</string>
     <string name="forgot_password_account_not_found">Account does not exist.</string>
     <string name="forgot_password_back_button">Back to login</string>
+    <string name="guardian_multiple_entry_exit_title">Unusual activity for %1$s</string>
+    <string name="guardian_multiple_entry_exit_body">%1$s has %2$d entries and %3$d exits today. Please check in.</string>
 </resources>

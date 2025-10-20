@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.view.*
 import android.widget.ImageButton
 import android.widget.Toast
+import android.app.NotificationManager
+import android.app.PendingIntent
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -17,6 +19,7 @@ import com.example.terraconnection.adapters.ScheduleAdapter
 import com.example.terraconnection.adapters.OnScheduleClickListener
 import com.example.terraconnection.adapters.AttendanceLogAdapter
 import com.example.terraconnection.api.RetrofitClient
+import com.example.terraconnection.api.StudentStatus
 import com.example.terraconnection.data.Schedule
 import com.example.terraconnection.databinding.FragmentHomePanelBinding
 import kotlinx.coroutines.launch
@@ -32,12 +35,15 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import com.bumptech.glide.Glide
 import androidx.core.content.ContextCompat
+import androidx.core.app.NotificationCompat
 import com.example.terraconnection.adapters.StudentStatusAdapter
 import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.Window
+import com.example.terraconnection.TerraApplication
 import com.example.terraconnection.activities.LoginPageActivity
+import com.example.terraconnection.activities.HomePanelActivity
 import com.example.terraconnection.data.User
 import com.example.terraconnection.databinding.DialogProfileBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -50,6 +56,7 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
     private lateinit var attendanceAdapter: AttendanceLogAdapter
     private lateinit var studentStatusAdapter: StudentStatusAdapter
     private var currentUser: User? = null
+    private val notifiedMultipleEntryStudents = mutableSetOf<Int>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -456,6 +463,7 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
                             binding.linkedStudentsEmptyState.visibility = View.GONE
                             binding.rvLinkedStudents.visibility = View.VISIBLE
                         }
+                        notifyMultipleEntryExitIfNeeded(studentsWithDetails)
                     }
                 }
             } else {
@@ -465,6 +473,56 @@ class HomePanelFragment : Fragment(R.layout.fragment_home_panel), OnScheduleClic
         } catch (e: Exception) {
             Log.e("HomePanelFragment", "Error fetching linked students: ${e.message}")
         }
+    }
+
+    private fun notifyMultipleEntryExitIfNeeded(students: List<StudentStatus>) {
+        students.forEach { student ->
+            if (student.hasMultipleEntryExit && notifiedMultipleEntryStudents.add(student.id)) {
+                showGuardianAlertNotification(student)
+            }
+        }
+    }
+
+    private fun showGuardianAlertNotification(student: StudentStatus) {
+        val context = requireContext()
+        val notificationManager = ContextCompat.getSystemService(context, NotificationManager::class.java)
+            ?: run {
+                Log.w("HomePanelFragment", "NotificationManager unavailable for guardian alert")
+                return
+            }
+
+        val title = getString(R.string.guardian_multiple_entry_exit_title, student.first_name)
+        val body = getString(
+            R.string.guardian_multiple_entry_exit_body,
+            student.first_name,
+            student.dailyEntryCount,
+            student.dailyExitCount
+        )
+
+        val intent = Intent(context, HomePanelActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            student.id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, TerraApplication.CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setSmallIcon(R.drawable.ic_notify)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+
+        val notificationId = 2000 + student.id
+        notificationManager.notify(notificationId, notification)
+        Log.d("HomePanelFragment", "Guardian notification displayed for student ${student.id}")
     }
 
     override fun onScheduleClick(schedule: Schedule) {

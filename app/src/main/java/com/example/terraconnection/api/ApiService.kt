@@ -136,6 +136,9 @@ data class StudentStatus(
     val lastLog: AttendanceLog?,
     val lastGPS: GPSLocation?,
     val profile_picture: String?,
+    val dailyEntryCount: Int = 0,
+    val dailyExitCount: Int = 0,
+    val hasMultipleEntryExit: Boolean = false,
     val user: User?
 )
 
